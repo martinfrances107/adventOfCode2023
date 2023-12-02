@@ -13,6 +13,5 @@ Here i want to create an assembley of algorithms which are considered best in cl
 
 ## Index
 
-- Day One - using .sum() and .to_digits(10)
-
-- Day Two ...
+- Day One - using .sum() and str::to_digits(10)
+- Day Two - using str::strip_suffix()

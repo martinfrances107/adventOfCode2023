@@ -17,7 +17,7 @@ impl Balls {
 }
 
 fn part1(input: &str) -> u32 {
-    let out = input
+    input
         .lines()
         .map(|line| {
             let (_game_header, sets_line) = line
@@ -64,17 +64,9 @@ fn part1(input: &str) -> u32 {
             }
 
             //The power of the max seen solution
-            dbg!(&max_b);
-            let power = max_b.power();
-
-            dbg!(&power);
-            println!("");
-            power
+            max_b.power()
         })
-        .collect::<Vec<u32>>();
-
-    dbg!(&out);
-    out.iter().sum()
+        .sum()
 }
 
 #[cfg(test)]
@@ -82,7 +74,7 @@ mod test {
 
     use super::*;
     #[test]
-    fn example() {
+    fn test_part2() {
         let input = r"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
