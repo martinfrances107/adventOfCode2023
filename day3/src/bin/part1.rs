@@ -1,5 +1,3 @@
-use core::{ops::Range, slice::SliceIndex};
-
 fn main() {
     let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
@@ -21,7 +19,7 @@ impl<'a> BoardRow<'a> {
         match self.0.get(start..end) {
             Some(segment) => {
                 for c in segment.chars() {
-                    if !c.is_digit(10) && c != '.' {
+                    if !c.is_ascii_digit() && c != '.' {
                         return true;
                     }
                 }
@@ -49,8 +47,8 @@ impl<'a> Board<'a> {
         let mut logging_number = false;
         let mut number_start = 0;
         for (i, char) in self.active.0.chars().enumerate() {
-            if char.is_digit(10) {
-                if logging_number == false {
+            if char.is_ascii_digit() {
+                if !logging_number {
                     logging_number = true;
                     number_start = i;
                 }
