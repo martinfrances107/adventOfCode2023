@@ -25,7 +25,6 @@ struct BoardRow<'a> {
 impl<'a> BoardRow<'a> {
     // Search board row and report if a gear is found.
     fn find_gear(&self, start: usize, end: usize) -> Option<usize> {
-        println!("{}", self.line);
         if let Some(segment) = self.line.get(start..end) {
             for (pos, char) in segment.chars().enumerate() {
                 if char == '*' {
@@ -82,34 +81,34 @@ impl<'a> Board<'a> {
 
                     if let Some(offset) = self.last.find_gear(search_start, search_end) {
                         let gear_key = (self.last.line_num, search_start + offset);
-                        println!("[last] found gear at {gear_key:#?}");
+                        // println!("[last] found gear at {gear_key:#?}");
                         // Found a number attached to a gear.
                         match self.gears.get_mut(&gear_key) {
                             Some(gear) => {
-                                print!("pushing to existing gear");
+                                // print!("pushing to existing gear");
                                 gear.push(number);
                             }
                             None => {
-                                print!("creating gear");
-                                dbg!(gear_key);
-                                dbg!(vec![number]);
+                                // print!("creating gear");
+                                // dbg!(gear_key);
+                                // dbg!(vec![number]);
                                 self.gears.insert(gear_key, vec![number]);
                             }
                         }
                     }
                     if let Some(offset) = self.active.find_gear(search_start, search_end) {
                         let gear_key = (self.active.line_num, search_start + offset);
-                        println!("[last] found gear at {gear_key:#?}");
+                        // println!("[last] found gear at {gear_key:#?}");
                         // Found a number attached to a gear.
                         match self.gears.get_mut(&gear_key) {
                             Some(gear) => {
-                                print!("pushing to existing gear");
+                                // print!("pushing to existing gear");
                                 gear.push(number);
                             }
                             None => {
-                                print!("creating gear");
-                                dbg!(gear_key);
-                                dbg!(vec![number]);
+                                // print!("creating gear");
+                                // dbg!(gear_key);
+                                // dbg!(vec![number]);
                                 self.gears.insert(gear_key, vec![number]);
                             }
                         }
@@ -117,17 +116,17 @@ impl<'a> Board<'a> {
 
                     if let Some(offset) = self.next.find_gear(search_start, search_end) {
                         let gear_key = (self.next.line_num, search_start + offset);
-                        println!("[last] found gear at {gear_key:#?}");
+                        // println!("[last] found gear at {gear_key:#?}");
                         // Found a number attached to a gear.
                         match self.gears.get_mut(&gear_key) {
                             Some(gear) => {
-                                print!("pushing to existing gear");
+                                // print!("pushing to existing gear");
                                 gear.push(number);
                             }
                             None => {
-                                print!("creating gear");
-                                dbg!(gear_key);
-                                dbg!(vec![number]);
+                                // print!("creating gear");
+                                // dbg!(gear_key);
+                                // dbg!(vec![number]);
                                 self.gears.insert(gear_key, vec![number]);
                             }
                         }
@@ -137,22 +136,78 @@ impl<'a> Board<'a> {
             }
         }
         if logging_number {
-            // let i = self.active.line.len();
-            // let number = self.active.line[number_start..i]
-            //     .parse::<u32>()
-            //     .expect("must have a valid number at this point");
-            // //Now we have a search range for a row
-            // // look above and below and see if we have a part number.
-            // let search_start = if number_start == 0 {
-            //     0usize
-            // } else {
-            //     number_start - 1
-            // };
-            // let search_end = if i == self.active.line.len() {
-            //     i
-            // } else {
-            //     i + 1
-            // };
+            let i = self.last.line.len();
+            // Number capture is ending
+            let number = self.active.line[number_start..i]
+                .parse::<u32>()
+                .expect("must have a valid number at this point");
+            //Now we have a search range for a row
+            // look above and below and see if we have a part number.
+            let search_start = if number_start == 0 {
+                0usize
+            } else {
+                number_start - 1
+            };
+            let search_end = if i == self.active.line.len() {
+                i
+            } else {
+                i + 1
+            };
+
+            if let Some(offset) = self.last.find_gear(search_start, search_end) {
+                let gear_key = (self.last.line_num, search_start + offset);
+                // println!("[last] found gear at {gear_key:#?}");
+                // Found a number attached to a gear.
+                match self.gears.get_mut(&gear_key) {
+                    Some(gear) => {
+                        // print!("pushing to existing gear");
+                        gear.push(number);
+                    }
+                    None => {
+                        // print!("creating gear");
+                        // dbg!(gear_key);
+                        // dbg!(vec![number]);
+                        self.gears.insert(gear_key, vec![number]);
+                    }
+                }
+            }
+            if let Some(offset) = self.active.find_gear(search_start, search_end) {
+                let gear_key = (self.active.line_num, search_start + offset);
+                // println!("[last] found gear at {gear_key:#?}");
+                // Found a number attached to a gear.
+                match self.gears.get_mut(&gear_key) {
+                    Some(gear) => {
+                        // print!("pushing to existing gear");
+                        gear.push(number);
+                    }
+                    None => {
+                        // print!("creating gear");
+                        // dbg!(gear_key);
+                        // dbg!(vec![number]);
+                        self.gears.insert(gear_key, vec![number]);
+                    }
+                }
+            }
+
+            if let Some(offset) = self.next.find_gear(search_start, search_end) {
+                let gear_key = (self.next.line_num, search_start + offset);
+                // println!("[last] found gear at {gear_key:#?}");
+                // Found a number attached to a gear.
+                match self.gears.get_mut(&gear_key) {
+                    Some(gear) => {
+                        // print!("pushing to existing gear");
+                        gear.push(number);
+                    }
+                    None => {
+                        // print!("creating gear");
+                        // dbg!(gear_key);
+                        // dbg!(vec![number]);
+                        self.gears.insert(gear_key, vec![number]);
+                    }
+                }
+            }
+
+            logging_number = false;
         }
     }
 }
@@ -163,7 +218,13 @@ fn part1(input: &str) -> u32 {
         board.update(line_num, line);
     }
     // push a blank line into update so the last last become the active line.
-    board.update(board.next.line_num + 1, "..........");
+    let line_len = board.active.line.len();
+    dbg!(line_len);
+
+    // created a blank line with 140 dots
+    let blank_line = ['.'; 140].into_iter().map(|c| c).collect::<String>();
+    dbg!(&blank_line);
+    board.update(board.next.line_num + 1, &blank_line);
 
     dbg!("have gear list");
     // Valid gear has 2 associated numbers.
