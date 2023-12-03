@@ -22,7 +22,6 @@ impl<'a> BoardRow<'a> {
             Some(segment) => {
                 for c in segment.chars() {
                     if !c.is_digit(10) && c != '.' {
-                        println!("part symbol {c}");
                         return true;
                     }
                 }
@@ -75,7 +74,6 @@ impl<'a> Board<'a> {
 
                     if is_part_number {
                         self.total += number;
-                        println!("extracted number {number:#?}");
                     }
                 }
                 logging_number = false;
@@ -100,7 +98,6 @@ impl<'a> Board<'a> {
 
             if is_part_number {
                 self.total += number;
-                println!("extracted number {number:#?}");
             }
         }
     }
@@ -110,11 +107,10 @@ fn part1(input: &str) -> u32 {
     let mut board = Board::default();
     for line in input.lines() {
         board.update(line);
-        // println!("{board:#?}");
     }
     // push a blank line into update so the last last become the active line.
     board.update("..........");
-    // println!("final total {}", board.total);
+
     board.total
 }
 
