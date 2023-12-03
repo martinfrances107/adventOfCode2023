@@ -81,6 +81,28 @@ impl<'a> Board<'a> {
                 logging_number = false;
             }
         }
+        if logging_number {
+            let i = self.active.0.len();
+            let number = self.active.0[number_start..i]
+                .parse::<u32>()
+                .expect("must have a valid number at this point");
+            //Now we have a search range for a row
+            // look above and below and see if we have a part number.
+            let search_start = if number_start == 0 {
+                0usize
+            } else {
+                number_start - 1
+            };
+            let search_end = if i == self.active.0.len() { i } else { i + 1 };
+            let is_part_number = self.last.has_part_number(search_start, search_end)
+                || self.active.has_part_number(search_start, search_end)
+                || self.next.has_part_number(search_start, search_end);
+
+            if is_part_number {
+                self.total += number;
+                println!("extracted number {number:#?}");
+            }
+        }
     }
 }
 
@@ -105,6 +127,22 @@ mod test {
         let input = r"467..114..
 ...*......
 ..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..";
+        assert_eq!(part1(input), 4361u32)
+    }
+
+    #[test]
+    // 633 is shift on to the right
+    fn number_on_right_boundary() {
+        let input = r"467..114..
+...*......
+..35...633
 ......#...
 617*......
 .....+.58.
