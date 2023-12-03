@@ -186,9 +186,6 @@ fn part1(input: &str) -> u32 {
     for (line_num, line) in input.lines().enumerate() {
         board.update(line_num, line);
     }
-    // push a blank line into update so the last last become the active line.
-    let line_len = board.active.line.len();
-    dbg!(line_len);
 
     // created a blank line with 140 dots
     let blank_line = ['.'; 140].into_iter().collect::<String>();
