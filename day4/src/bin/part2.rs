@@ -69,16 +69,15 @@ fn part2(input: &str) -> usize {
     loop {
         let winnings = collect_winings(&original_cards, &active_list);
         total += active_list.len();
-        // dbg!(&winnings);
-        // dbg!(total);
         if active_list.is_empty() {
             break;
         }
-        if lc > 2000000 {
-            assert!(false);
+        if lc > 300 {
+            println!("Failed loop count exceeded");
+            break;
         }
         lc += 1;
-        active_list = winnings.clone();
+        active_list = winnings;
     }
     total
 }
