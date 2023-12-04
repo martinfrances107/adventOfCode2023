@@ -9,7 +9,7 @@ fn collect_winings<'a>(reference_list: &Vec<&'a str>, active_list: &Vec<&'a str>
     for line in active_list.iter() {
         if let Some((header, w_p)) = line.split_once(':') {
             // Recover game number from header.
-            let card_num = if let Some(card_num_str) = header.strip_prefix(&"Card ") {
+            let card_num = if let Some(card_num_str) = header.strip_prefix("Card ") {
                 if let Ok(card_num) = card_num_str.trim().parse::<usize>() {
                     // dbg!(&card_num);
                     card_num
@@ -68,10 +68,10 @@ fn part2(input: &str) -> usize {
     let mut lc = 0;
     loop {
         let winnings = collect_winings(&original_cards, &active_list);
-        total = total + active_list.len();
+        total += active_list.len();
         // dbg!(&winnings);
         // dbg!(total);
-        if active_list.len() == 0 {
+        if active_list.is_empty() {
             break;
         }
         if lc > 2000000 {
