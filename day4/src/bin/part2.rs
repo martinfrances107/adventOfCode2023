@@ -157,6 +157,7 @@ Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1";
 
     #[test]
     fn winnings_from_four_cards() {
+        // the story of card 4 ( 1 original + 7 copies)
         let input_str = r"Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
 Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
 Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
@@ -165,6 +166,7 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83";
 
         let copies1 = collect_winings(&input, &input);
 
+        // 3 copies of "card 4" here.
         assert_eq!(
             copies1,
             vec![
@@ -182,6 +184,7 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83";
 
         // Treat the won copies as "active" and process them.
         let copies2 = collect_winings(&input, &copies1);
+        // 3 copies of "card 4" here.
         assert_eq!(
             copies2,
             vec![
@@ -190,6 +193,15 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83";
                 r"Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83",
                 // won from processing card 3
                 r"Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83",
+                // won from processing card 3
+                r"Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83",
+            ]
+        );
+        let copies3 = collect_winings(&input, &copies2);
+        // 3 copies of "card 4" here. == makes 7 copies in total
+        assert_eq!(
+            copies3,
+            vec![
                 // won from processing card 3
                 r"Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83",
             ]
