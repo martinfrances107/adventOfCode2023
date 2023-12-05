@@ -5,16 +5,22 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
-#[derive(Default, Debug)]
-struct Converter {
-    range_and_offset: Vec<(Range<i128>, i128)>,
+#[derive(Debug, Default, PartialEq)]
+struct SeedMapStage {
+    range: Range<i128>,
+    offset: i128,
 }
 
-impl Converter {
+#[derive(Debug, Default, PartialEq)]
+struct SeedMap {
+    pub stages: Vec<SeedMapStage>,
+}
+
+impl SeedMap {
     fn convert(&self, x: i128) -> i128 {
-        for (range, offset) in &self.range_and_offset {
-            if range.contains(&x) {
-                return x + *offset;
+        for stage in &self.stages {
+            if stage.range.contains(&x) {
+                return x + stage.offset;
             }
         }
         x
@@ -23,40 +29,32 @@ impl Converter {
 #[derive(Debug, Clone)]
 struct ConverterErr;
 
-impl TryFrom<&str> for Converter {
+impl TryFrom<&str> for SeedMapStage {
     type Error = ConverterErr;
-    fn try_from(input: &str) -> Result<Converter, Self::Error> {
-        let mut range_and_offset = vec![];
-        for line in input.lines() {
-            let mut inputs = line.split(' ').filter_map(|x| x.parse::<i128>().ok());
-            // TODO is there a singler way of rejecting the failure to parse as early as possible.
-            let dst = inputs.next().ok_or(ConverterErr)?;
-            let start = inputs.next().ok_or(ConverterErr)?;
-            let range_len = inputs.next().ok_or(ConverterErr)?;
-            dbg!(&dst);
-            dbg!(&start);
-            dbg!(&range_len);
-            let end = start + range_len;
-            let offset = dst - start;
-            range_and_offset.push((start..end, offset));
-        }
-
-        // If preseted with a blank line this will error.
-        if range_and_offset.is_empty() {
-            return Err(ConverterErr);
-        }
-        Ok(Self { range_and_offset })
+    fn try_from(input: &str) -> Result<SeedMapStage, Self::Error> {
+        let mut numbers = input.split(' ').filter_map(|x| x.parse::<i128>().ok());
+        // TODO is there a singler way of rejecting the failure to parse as early as possible.
+        let dst = numbers.next().ok_or(ConverterErr)?;
+        let start = numbers.next().ok_or(ConverterErr)?;
+        let range_len = numbers.next().ok_or(ConverterErr)?;
+        dbg!(&dst);
+        dbg!(&start);
+        dbg!(&range_len);
+        let end = start + range_len;
+        let offset = dst - start;
+        Ok(SeedMapStage {
+            range: start..end,
+            offset,
+        })
     }
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 struct Almanac {
-    converters_list: Vec<Vec<Converter>>,
+    pub maps: Vec<SeedMap>,
 }
 
 impl From<&str> for Almanac {
     fn from(input: &str) -> Self {
-        let mut out = Self::default();
-
         // let headerIterBlock = input.lines().take(2);
         let mut lines = input.lines();
         let h1 = lines.next();
@@ -64,40 +62,54 @@ impl From<&str> for Almanac {
 
         // assert than a title line is observed ( a line with a ':')
 
-        // Collect maps
-        loop {
-            let have_title = lines.next().unwrap().contains(':');
-            if !have_title {
-                panic!("was expecting a title");
-            }
+        let mut almanac = Almanac::default();
+        //Looping over titled map definitions.
+        'block_loop: loop {
+            // At the start of a block
+            // expect block heading
+            let mut seedMap = SeedMap::default();
+
+            match lines.next() {
+                Some(line) => {
+                    let have_title = line.contains(':');
+                    if !have_title {
+                        panic!("was expecting a title");
+                    }
+                }
+                None => {
+                    // eof
+                    dbg!("breaking at end of file");
+                    panic!("why here");
+                }
+            };
 
             loop {
-                let mut converters: Vec<Converter> = vec![];
                 match lines.next() {
                     Some(line) => {
                         dbg!(&line);
-                        // help
                         match line.try_into() {
-                            Ok(converter) => {
-                                // hhh
-                                converters.push(converter);
+                            Ok(stage) => {
+                                println!("pushing to block list");
+                                dbg!(&stage);
+                                seedMap.stages.push(stage);
                             }
                             Err(_) => {
-                                // blank line
-                                dbg!("Failed to convert");
-                                break;
-                                // panic!("Could not convert line into a converter");
+                                // Something "not a valid converter" is treated as a blank line.
+                                dbg!("was that a blank line");
+                                almanac.maps.push(seedMap);
+                                break 'block_loop;
                             }
                         };
                     }
                     None => {
-                        // eof
-                        break;
+                        dbg!("EOF pushing final block list");
+                        almanac.maps.push(seedMap);
+                        break 'block_loop;
                     }
                 }
             }
         }
-        out
+        almanac
     }
 }
 
@@ -132,27 +144,61 @@ mod test {
             [99, 51],
         ];
 
-        let definition = r"50 98 2
+        let input_str = r"H1
+
+Title:
+50 98 2
 52 50 48";
 
-        if let Ok(converter) = Converter::try_from(definition) {
-            for [input, expected] in dataset {
-                let actual = converter.convert(input);
-                assert_eq!(actual, expected);
-            }
+        let almanac: Almanac = input_str.into();
+        for [input, expected] in dataset {
+            let actual = almanac.maps[0].convert(input);
+            assert_eq!(actual, expected);
         }
     }
 
     #[test]
     fn test_blank_line_fails_to_convert() {
         let input = "";
-        if let Ok(c) = Converter::try_from(input) {
+        if let Ok(c) = SeedMapStage::try_from(input) {
             dbg!(c);
             assert!(false);
         } else {
             assert!(true);
         }
     }
+
+    #[test]
+    // Inspeciton of the struct of the Almanac.
+    // Give the "converter" test this maybe hard of justify
+    fn one_block() {
+        let input = r"seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+";
+        let actual: Almanac = input.into();
+
+        let expected = Almanac {
+            maps: vec![SeedMap {
+                stages: vec![
+                    SeedMapStage {
+                        range: 98..100,
+                        offset: -48,
+                    },
+                    SeedMapStage {
+                        range: 50..98,
+                        offset: 2,
+                    },
+                ],
+            }],
+        };
+
+        assert_eq!(expected, actual);
+    }
+
+    #[ignore]
     #[test]
     fn example() {
         let input = r"seeds: 79 14 55 13
