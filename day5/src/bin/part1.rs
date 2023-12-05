@@ -1,9 +1,11 @@
 use core::ops::Range;
+use core::str::Lines;
 fn main() {
     let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
 }
 
+#[derive(Default, Debug)]
 struct Converter {
     range_and_offset: Vec<(Range<i128>, i128)>,
 }
@@ -18,29 +20,90 @@ impl Converter {
         x
     }
 }
+#[derive(Debug, Clone)]
+struct ConverterErr;
 
-impl From<&str> for Converter {
-    fn from(input: &str) -> Self {
+impl TryFrom<&str> for Converter {
+    type Error = ConverterErr;
+    fn try_from(input: &str) -> Result<Converter, Self::Error> {
         let mut range_and_offset = vec![];
         for line in input.lines() {
             let mut inputs = line.split(' ').filter_map(|x| x.parse::<i128>().ok());
-            let dst = inputs.next().expect("dst must be present");
-            let start = inputs.next().expect("start must be present");
-            let range_len = inputs.next().expect("range must be present");
+            // TODO is there a singler way of rejecting the failure to parse as early as possible.
+            let dst = inputs.next().ok_or(ConverterErr)?;
+            let start = inputs.next().ok_or(ConverterErr)?;
+            let range_len = inputs.next().ok_or(ConverterErr)?;
+            dbg!(&dst);
+            dbg!(&start);
+            dbg!(&range_len);
             let end = start + range_len;
             let offset = dst - start;
             range_and_offset.push((start..end, offset));
         }
-        Self { range_and_offset }
+
+        // If preseted with a blank line this will error.
+        if range_and_offset.is_empty() {
+            return Err(ConverterErr);
+        }
+        Ok(Self { range_and_offset })
     }
 }
+#[derive(Debug, Default)]
 struct Almanac {
-    converters: Vec<Converter>,
+    converters_list: Vec<Vec<Converter>>,
 }
 
 impl From<&str> for Almanac {
-    fn from(_input: &str) -> Self {
-        todo!();
+    fn from(input: &str) -> Self {
+        let mut out = Self::default();
+
+        // let headerIterBlock = input.lines().take(2);
+        let mut lines = input.lines();
+        let h1 = lines.next();
+        let h2 = lines.next();
+
+        // assert than a title line is observed ( a line with a ':')
+
+        // Collect maps
+        loop {
+            let have_title = lines.next().unwrap().contains(':');
+            if !have_title {
+                panic!("was expecting a title");
+            }
+
+            loop {
+                let mut converters: Vec<Converter> = vec![];
+                match lines.next() {
+                    Some(line) => {
+                        dbg!(&line);
+                        // help
+                        match line.try_into() {
+                            Ok(converter) => {
+                                // hhh
+                                converters.push(converter);
+                            }
+                            Err(_) => {
+                                // blank line
+                                dbg!("Failed to convert");
+                                break;
+                                // panic!("Could not convert line into a converter");
+                            }
+                        };
+                    }
+                    None => {
+                        // eof
+                        break;
+                    }
+                }
+            }
+        }
+        out
+    }
+}
+
+impl Almanac {
+    fn location_from_seed(&self, seed: &i128) -> i128 {
+        *seed
     }
 }
 
@@ -72,15 +135,25 @@ mod test {
         let definition = r"50 98 2
 52 50 48";
 
-        let converter: Converter = definition.into();
-        for [input, expected] in dataset {
-            let actual = converter.convert(input);
-            assert_eq!(actual, expected);
+        if let Ok(converter) = Converter::try_from(definition) {
+            for [input, expected] in dataset {
+                let actual = converter.convert(input);
+                assert_eq!(actual, expected);
+            }
         }
     }
 
     #[test]
-    #[ignore]
+    fn test_blank_line_fails_to_convert() {
+        let input = "";
+        if let Ok(c) = Converter::try_from(input) {
+            dbg!(c);
+            assert!(false);
+        } else {
+            assert!(true);
+        }
+    }
+    #[test]
     fn example() {
         let input = r"seeds: 79 14 55 13
 
@@ -115,6 +188,14 @@ temperature-to-humidity map:
 humidity-to-location map:
 60 56 37
 56 93 4";
-        assert_eq!(part1(input), 142u32)
+
+        let seed_location_reference: Vec<[i128; 2]> = vec![[79, 82], [14, 43], [55, 86], [13, 35]];
+
+        let almanac: Almanac = input.into();
+
+        for [seed, location] in seed_location_reference {
+            let computed_location = almanac.location_from_seed(&seed);
+            assert_eq!(location, computed_location);
+        }
     }
 }
