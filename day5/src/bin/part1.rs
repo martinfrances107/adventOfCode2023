@@ -1,26 +1,26 @@
 use core::ops::Range;
-use core::str::Lines;
+
 fn main() {
     let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
 }
 
 #[derive(Debug, Default, PartialEq)]
-struct SeedMapStage {
+struct SubRange {
     range: Range<i128>,
     offset: i128,
 }
 
 #[derive(Debug, Default, PartialEq)]
-struct SeedMap {
-    pub stages: Vec<SeedMapStage>,
+struct SeedMapStage {
+    subs: Vec<SubRange>,
 }
 
-impl SeedMap {
+impl SeedMapStage {
     fn convert(&self, x: i128) -> i128 {
-        for stage in &self.stages {
-            if stage.range.contains(&x) {
-                return x + stage.offset;
+        for sub in &self.subs {
+            if sub.range.contains(&x) {
+                return x + sub.offset;
             }
         }
         x
@@ -29,45 +29,57 @@ impl SeedMap {
 #[derive(Debug, Clone)]
 struct ConverterErr;
 
-impl TryFrom<&str> for SeedMapStage {
+impl TryFrom<&str> for SubRange {
     type Error = ConverterErr;
-    fn try_from(input: &str) -> Result<SeedMapStage, Self::Error> {
+    fn try_from(input: &str) -> Result<SubRange, Self::Error> {
         let mut numbers = input.split(' ').filter_map(|x| x.parse::<i128>().ok());
         // TODO is there a singler way of rejecting the failure to parse as early as possible.
         let dst = numbers.next().ok_or(ConverterErr)?;
         let start = numbers.next().ok_or(ConverterErr)?;
         let range_len = numbers.next().ok_or(ConverterErr)?;
-        dbg!(&dst);
-        dbg!(&start);
-        dbg!(&range_len);
         let end = start + range_len;
         let offset = dst - start;
-        Ok(SeedMapStage {
+        Ok(SubRange {
             range: start..end,
             offset,
         })
     }
 }
+
+#[derive(Debug, Default, PartialEq)]
+struct SeedMap {
+    pub stages: Vec<SeedMapStage>,
+}
+
 #[derive(Debug, Default, PartialEq)]
 struct Almanac {
-    pub maps: Vec<SeedMap>,
+    pub seeds: Vec<i128>,
+    pub stages: Vec<SeedMapStage>,
 }
 
 impl From<&str> for Almanac {
     fn from(input: &str) -> Self {
-        // let headerIterBlock = input.lines().take(2);
+        let mut almanac = Almanac::default();
+
         let mut lines = input.lines();
-        let h1 = lines.next();
-        let h2 = lines.next();
+        let seed_line = lines.next().expect("could not read the seed line");
+        let Some((_header, seed_number_line)) = seed_line.split_once(':') else {
+            panic!("no seed line");
+        };
+        let seeds = seed_number_line
+            .split(' ')
+            .filter_map(|x| x.parse::<i128>().ok())
+            .collect::<Vec<_>>();
+        println!("{:#?}", seeds);
+        almanac.seeds = seeds;
+        let _blank = lines.next();
 
         // assert than a title line is observed ( a line with a ':')
 
-        let mut almanac = Almanac::default();
         //Looping over titled map definitions.
         'block_loop: loop {
             // At the start of a block
             // expect block heading
-            let mut seedMap = SeedMap::default();
 
             match lines.next() {
                 Some(line) => {
@@ -82,28 +94,31 @@ impl From<&str> for Almanac {
                     panic!("why here");
                 }
             };
-
+            let mut subs: Vec<SubRange> = vec![];
             loop {
                 match lines.next() {
                     Some(line) => {
                         dbg!(&line);
                         match line.try_into() {
-                            Ok(stage) => {
-                                println!("pushing to block list");
-                                dbg!(&stage);
-                                seedMap.stages.push(stage);
+                            Ok(subrange) => {
+                                // println!("pushing subrange");
+                                // dbg!(&subrange);
+                                subs.push(subrange);
                             }
                             Err(_) => {
                                 // Something "not a valid converter" is treated as a blank line.
-                                dbg!("was that a blank line");
-                                almanac.maps.push(seedMap);
-                                break 'block_loop;
+                                // dbg!("pushing subs");
+                                // dbg!(&subs);
+                                let stage = SeedMapStage { subs };
+                                almanac.stages.push(stage);
+                                break;
                             }
                         };
                     }
                     None => {
                         dbg!("EOF pushing final block list");
-                        almanac.maps.push(seedMap);
+                        let stage = SeedMapStage { subs };
+                        almanac.stages.push(stage);
                         break 'block_loop;
                     }
                 }
@@ -114,8 +129,18 @@ impl From<&str> for Almanac {
 }
 
 impl Almanac {
-    fn location_from_seed(&self, seed: &i128) -> i128 {
-        *seed
+    // using the seed number as initial value
+    // "stream" as in pass the value from the one stage into the input of the next.
+    fn stream(&self, seed: i128) -> i128 {
+        dbg!(&self.stages);
+        println!("streaming .................................");
+        let mut value = seed;
+        dbg!(&value);
+        for stage in self.stages.iter() {
+            value = stage.convert(value);
+            dbg!(&value);
+        }
+        value
     }
 }
 
@@ -144,15 +169,16 @@ mod test {
             [99, 51],
         ];
 
-        let input_str = r"H1
+        let input_str = r"seeds: 79 14 55 13
 
 Title:
 50 98 2
 52 50 48";
 
         let almanac: Almanac = input_str.into();
+        dbg!(&almanac);
         for [input, expected] in dataset {
-            let actual = almanac.maps[0].convert(input);
+            let actual = almanac.stages[0].convert(input);
             assert_eq!(actual, expected);
         }
     }
@@ -160,8 +186,9 @@ Title:
     #[test]
     fn test_blank_line_fails_to_convert() {
         let input = "";
-        if let Ok(c) = SeedMapStage::try_from(input) {
-            dbg!(c);
+
+        if let Ok(subrange) = SubRange::try_from(input) {
+            dbg!(subrange);
             assert!(false);
         } else {
             assert!(true);
@@ -181,13 +208,14 @@ seed-to-soil map:
         let actual: Almanac = input.into();
 
         let expected = Almanac {
-            maps: vec![SeedMap {
-                stages: vec![
-                    SeedMapStage {
+            seeds: vec![79, 14, 55, 13],
+            stages: vec![SeedMapStage {
+                subs: vec![
+                    SubRange {
                         range: 98..100,
                         offset: -48,
                     },
-                    SeedMapStage {
+                    SubRange {
                         range: 50..98,
                         offset: 2,
                     },
@@ -198,7 +226,49 @@ seed-to-soil map:
         assert_eq!(expected, actual);
     }
 
-    #[ignore]
+    #[test]
+    fn soil() {
+        let input = r"seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+";
+
+        let a: Almanac = input.into();
+
+        // maps seed to fertilizer
+        let dataset: Vec<[i128; 2]> = vec![[79, 81], [14, 14], [55, 57], [13, 13]];
+        for [seed, expected] in dataset {
+            let actual = a.stream(seed);
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
+    fn fertilizer() {
+        let input = r"seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+";
+
+        let a: Almanac = input.into();
+
+        // maps seed to fertilizer
+        let dataset: Vec<[i128; 2]> = vec![[79, 81], [14, 53], [55, 57], [13, 52]];
+        for [seed, expected] in dataset {
+            let actual = a.stream(seed);
+            assert_eq!(actual, expected);
+        }
+    }
+
     #[test]
     fn example() {
         let input = r"seeds: 79 14 55 13
@@ -238,9 +308,9 @@ humidity-to-location map:
         let seed_location_reference: Vec<[i128; 2]> = vec![[79, 82], [14, 43], [55, 86], [13, 35]];
 
         let almanac: Almanac = input.into();
-
+        dbg!(&almanac);
         for [seed, location] in seed_location_reference {
-            let computed_location = almanac.location_from_seed(&seed);
+            let computed_location = almanac.stream(seed);
             assert_eq!(location, computed_location);
         }
     }
