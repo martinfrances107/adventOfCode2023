@@ -98,7 +98,7 @@ impl From<&str> for Almanac {
             loop {
                 match lines.next() {
                     Some(line) => {
-                        dbg!(&line);
+                        // dbg!(&line);
                         match line.try_into() {
                             Ok(subrange) => {
                                 // println!("pushing subrange");
@@ -138,15 +138,16 @@ impl Almanac {
         dbg!(&value);
         for stage in self.stages.iter() {
             value = stage.convert(value);
-            dbg!(&value);
+            // dbg!(&value);
         }
         value
     }
 }
 
-fn part1(input: &str) -> u32 {
-    let _al: Almanac = input.into();
-    todo!();
+fn part1(input: &str) -> i128 {
+    let al: Almanac = input.into();
+    let locations: Vec<i128> = al.seeds.iter().map(|seed| al.stream(*seed)).collect();
+    *locations.iter().min().expect("min have at least one value")
 }
 
 #[cfg(test)]
