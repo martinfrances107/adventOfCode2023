@@ -70,7 +70,7 @@ impl From<&str> for Almanac {
             .split(' ')
             .filter_map(|x| x.parse::<i128>().ok())
             .collect::<Vec<_>>();
-        println!("{:#?}", seeds);
+        // println!("{:#?}", seeds);
         almanac.seeds = seeds;
         let _blank = lines.next();
 
@@ -90,7 +90,7 @@ impl From<&str> for Almanac {
                 }
                 None => {
                     // eof
-                    dbg!("breaking at end of file");
+                    // dbg!("breaking at end of file");
                     panic!("why here");
                 }
             };
@@ -116,7 +116,7 @@ impl From<&str> for Almanac {
                         };
                     }
                     None => {
-                        dbg!("EOF pushing final block list");
+                        // dbg!("EOF pushing final block list");
                         let stage = SeedMapStage { subs };
                         almanac.stages.push(stage);
                         break 'block_loop;
@@ -132,10 +132,10 @@ impl Almanac {
     // using the seed number as initial value
     // "stream" as in pass the value from the one stage into the input of the next.
     fn stream(&self, seed: i128) -> i128 {
-        dbg!(&self.stages);
-        println!("streaming .................................");
+        // dbg!(&self.stages);
+        // println!("streaming .................................");
         let mut value = seed;
-        dbg!(&value);
+        // dbg!(&value);
         for stage in self.stages.iter() {
             value = stage.convert(value);
             // dbg!(&value);
@@ -146,8 +146,8 @@ impl Almanac {
 
 fn part1(input: &str) -> i128 {
     let al: Almanac = input.into();
-    let locations: Vec<i128> = al.seeds.iter().map(|seed| al.stream(*seed)).collect();
-    *locations.iter().min().expect("min have at least one value")
+    let locations = al.seeds.iter().map(|seed| al.stream(*seed));
+    locations.min().expect("min have at least one value")
 }
 
 #[cfg(test)]
@@ -177,7 +177,7 @@ Title:
 52 50 48";
 
         let almanac: Almanac = input_str.into();
-        dbg!(&almanac);
+        // dbg!(&almanac);
         for [input, expected] in dataset {
             let actual = almanac.stages[0].convert(input);
             assert_eq!(actual, expected);

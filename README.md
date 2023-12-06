@@ -30,4 +30,5 @@ Here i want to create an assembley of algorithms which are considered best in cl
                 Minimal "Card" should be a list of card offset to "copy"
                 Looking using "fold"
 
-Dat 5   5
+Dat 5   5  -   Refator
+                Could you take_while to avoid nested looping.
