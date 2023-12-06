@@ -30,5 +30,14 @@ Here i want to create an assembley of algorithms which are considered best in cl
                 Minimal "Card" should be a list of card offset to "copy"
                 Looking using "fold"
 
-Dat 5   5  -   Refator
-                Could you take_while to avoid nested looping.
+- Day 5   -  Refator
+              Could you take_while to avoid nested looping.
+              part 2 is tricky
+              Good use of .chunks(2) to split the seeds int pairs of numbers.
+              - The only optimisation currently is to treat the seed blocks
+              as a "batch lot" compute the min and then push that min forward and then find
+              the mins of all the candiate mins. Otherwise the memory footprint get out of hand.
+              Currently runs in 3m41sec -
+               -- must remove all .collect() calls and remove memory usage.
+               -- Use rayon .. and compute all seed blocks in parallel?
+- Day 6
