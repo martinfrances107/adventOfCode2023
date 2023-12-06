@@ -40,4 +40,7 @@ Here i want to create an assembley of algorithms which are considered best in cl
               Currently runs in 3m41sec ( --release )
                -- must remove all .collect() calls and remove memory usage.
                -- Use rayon .. and compute all seed blocks in parallel?
-- Day 6
+
+- Day 6   - Part 1:  An example of a small memory footprint.
+            Two iterators are ".zip()ed' and fed into a .product() call with out any
+            intermediate value ever being ".collected()".

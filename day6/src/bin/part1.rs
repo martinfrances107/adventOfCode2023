@@ -17,8 +17,7 @@ fn part1(input: &str) -> u32 {
     let times = time_block
         .trim()
         .split(' ')
-        .filter_map(|x| x.trim().parse::<u32>().ok())
-        .collect::<Vec<u32>>();
+        .filter_map(|x| x.trim().parse::<u32>().ok());
 
     let Some((_header, distance_block)) = dist_line.split_once(':') else {
         println!("Failed to extract distance");
@@ -26,13 +25,11 @@ fn part1(input: &str) -> u32 {
     };
     let distances = distance_block
         .split(' ')
-        .filter_map(|x| x.trim().parse::<u32>().ok())
-        .collect::<Vec<_>>();
+        .filter_map(|x| x.trim().parse::<u32>().ok());
 
     let product_of_ways: u32 = times
-        .iter()
-        .zip(distances.iter())
-        .map(|(time, distance)| nummber_of_ways(time, distance))
+        .zip(distances)
+        .map(|(time, distance)| nummber_of_ways(&time, &distance))
         .product();
 
     product_of_ways
