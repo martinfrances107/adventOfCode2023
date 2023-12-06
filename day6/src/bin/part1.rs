@@ -89,6 +89,6 @@ mod test {
     fn example() {
         let input = r"Time:      7  15   30
 Distance:  9  40  200";
-        assert_eq!(part1(input), 142u32)
+        assert_eq!(part1(input), 288u32)
     }
 }
