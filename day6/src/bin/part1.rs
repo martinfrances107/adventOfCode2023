@@ -9,12 +9,11 @@ fn part1(input: &str) -> u32 {
     let time_line = lines.next().expect("time line must exits");
     let dist_line = lines.next().expect("distance line must exits");
 
-    // dbg!(time_line);
     let Some((_header, time_block)) = time_line.split_once(':') else {
         println!("Failed to extract time ");
         return 0;
     };
-    // dbg!(&time_block.trim());
+
     let times = time_block
         .trim()
         .split(' ')
@@ -30,29 +29,14 @@ fn part1(input: &str) -> u32 {
         .filter_map(|x| x.trim().parse::<u32>().ok())
         .collect::<Vec<_>>();
 
-    let inputs = times.iter().zip(distances.iter());
+    let product_of_ways: u32 = times
+        .iter()
+        .zip(distances.iter())
+        .map(|(time, distance)| nummber_of_ways(time, distance))
+        .product();
 
-    let mut n_ways = vec![];
-    for (time, distance) in inputs {
-        //
-        // println!("time {time} distance {distance}");
-        n_ways.push(nummber_of_ways(time, distance));
-    }
-
-    let mut product = 1;
-    for n in n_ways {
-        product *= n;
-    }
-    product
+    product_of_ways
 }
-
-// fn compute_distance(ht: u32, time: u32) -> u32 {
-//     let velocity = ht;
-//     let running_time = time - ht;
-//     let dist = velocity * running_time;
-
-//     dist
-// }
 
 fn nummber_of_ways(time: &u32, best_distance: &u32) -> u32 {
     // dbg!(&best_distance);
@@ -61,14 +45,12 @@ fn nummber_of_ways(time: &u32, best_distance: &u32) -> u32 {
         .map(|ht| {
             let velocity = ht;
             let running_time = time - ht;
-            let dist = velocity * running_time;
-
-            dist
+            // return calculates distance
+            velocity * running_time
         })
         .filter(|d| d > best_distance)
         .collect::<Vec<_>>();
 
-    // dbg!(&distances);
     distances.len() as u32
 }
 
