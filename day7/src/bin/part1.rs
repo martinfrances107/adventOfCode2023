@@ -6,9 +6,32 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
-fn part1(input: &str) -> u32 {
-    1u32
+fn part1(input: &str) -> u64 {
+    let mut hands = input
+        .lines()
+        .map(|line| {
+            let (hand_str, bid_str) = line.split_once(' ').expect("one wite space");
+            let hand: Hand = hand_str.into();
+            let bid = bid_str.parse::<u64>().expect("failed to parse bid");
+            (hand, bid)
+        })
+        .collect::<Vec<(Hand, u64)>>();
+    // Ranked hands are sorted hands.
+    // assert_eq!(hands.len(), 1000);
+    hands.sort();
+
+    // assert_eq!(hands.len(), 1000);
+    hands
+        .iter()
+        .enumerate()
+        .map(|(i, (_hand, bid))| {
+            let rank = (i as u64) + 1;
+            
+            rank * bid
+        })
+        .sum()
 }
+
 #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Hash, Eq)]
 enum Card {
     Two,
@@ -83,7 +106,7 @@ impl From<&str> for Hand {
                     // increment tally.
                     match histogram.get_mut(&uc) {
                         Some(count) => {
-                            *count = *count + 1;
+                            *count += 1;
                         }
                         None => {
                             histogram.insert(uc, 1);
@@ -116,7 +139,10 @@ impl From<&str> for Hand {
             .expect("There must always be a primary grouping");
         let r2_c2 = iter.next();
 
-        let p = match (r1, r2_c2) {
+        
+
+        // dbg!(&hand);
+        match (r1, r2_c2) {
             (5, None) => Hand::FiveOfAKind(**c1),
             (4, Some((_, c2))) => Hand::FourOfAKind(**c1, **c2),
             (3, Some((&2, c2))) => Hand::FullHouse(**c1, **c2),
@@ -153,10 +179,7 @@ impl From<&str> for Hand {
             _ => {
                 panic!("bad decode");
             }
-        };
-
-        // dbg!(&hand);
-        p
+        }
     }
 }
 
@@ -202,7 +225,7 @@ QQQJA 48";
         let mut hands = input
             .lines()
             .map(|line| {
-                let (hand_str, bid_str) = line.split_once(' ').expect("one wite space");
+                let (hand_str, bid_str) = line.split_once(' ').expect("one white space");
                 let hand: Hand = hand_str.into();
                 let _bid = bid_str.parse::<u32>().expect("failed to parse bid");
                 hand
@@ -222,5 +245,28 @@ QQQJA 48";
         ];
 
         assert_eq!(expected_ranked_hanks, hands);
+    }
+
+    #[test]
+    fn calc_sum() {
+        let input = r"32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483";
+
+        let total = part1(input);
+        assert_eq!(total, 6440);
+    }
+
+    #[test]
+    fn cherry_picking() {
+        // edges cases seen in the input.txt file
+
+        assert_eq!(Hand::FiveOfAKind(Card::J), r"JJJJJ".into());
+        assert_eq!(
+            Hand::TwoPair(Card::Ace, Card::T, Card::Six),
+            r"TATA6".into(),
+        );
     }
 }
