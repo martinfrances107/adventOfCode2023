@@ -105,12 +105,17 @@ impl PartialOrd for Hand {
         match self {
             Hand::HighCard(c0) => match other {
                 Hand::HighCard(c1) => Some(c0.cmp(c1)),
-                _ => Some(Ordering::Greater),
+                Hand::OnePair(_)
+                | Hand::TwoPair(_)
+                | Hand::ThreeOfAKind(_)
+                | Hand::FullHouse(_)
+                | Hand::FourOfAKind(_)
+                | Hand::FiveOfAKind(_) => Some(Ordering::Less),
             },
             Hand::OnePair(c0) => match other {
+                Hand::HighCard(_) => Some(Ordering::Greater),
                 Hand::OnePair(c1) => Some(c0.cmp(c1)),
-                Hand::HighCard(_)
-                | Hand::TwoPair(_)
+                Hand::TwoPair(_)
                 | Hand::ThreeOfAKind(_)
                 | Hand::FullHouse(_)
                 | Hand::FourOfAKind(_)
@@ -349,6 +354,14 @@ QQQJA 483";
         let low = Hand::TwoPair([Card::K, Card::K, Card::Six, Card::Seven, Card::Seven]);
         assert_eq!(high.cmp(&low), Ordering::Greater);
         assert_eq!(high.cmp(&high), Ordering::Equal);
+        assert_eq!(low.cmp(&low), Ordering::Equal);
+        assert_eq!(low.cmp(&high), Ordering::Less);
+
+        let high = Hand::FiveOfAKind([Card::Ace, Card::Ace, Card::Ace, Card::Ace, Card::Ace]);
+        let low = Hand::HighCard([Card::Ace, Card::T, Card::Nine, Card::Eight, Card::Seven]);
+        assert_eq!(high.cmp(&low), Ordering::Greater);
+        assert_eq!(high.cmp(&high), Ordering::Equal);
+        assert_eq!(low.cmp(&low), Ordering::Equal);
         assert_eq!(low.cmp(&high), Ordering::Less);
     }
 }
