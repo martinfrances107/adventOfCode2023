@@ -26,7 +26,7 @@ fn part1(input: &str) -> u64 {
         .enumerate()
         .map(|(i, (_hand, bid))| {
             let rank = (i as u64) + 1;
-            
+
             rank * bid
         })
         .sum()
@@ -138,8 +138,6 @@ impl From<&str> for Hand {
             .next()
             .expect("There must always be a primary grouping");
         let r2_c2 = iter.next();
-
-        
 
         // dbg!(&hand);
         match (r1, r2_c2) {
@@ -267,6 +265,22 @@ QQQJA 483";
         assert_eq!(
             Hand::TwoPair(Card::Ace, Card::T, Card::Six),
             r"TATA6".into(),
+        );
+    }
+
+    #[test]
+    fn missing() {
+        // Missing examples not seen in test
+        // five of a kind
+        assert_eq!(Hand::FiveOfAKind(Card::J), r"JJJJJ".into());
+        // 4 of a kind
+        assert_eq!(Hand::FourOfAKind(Card::Two, Card::Ace,), r"22A22".into(),);
+        // Full house
+        assert_eq!(Hand::FullHouse(Card::Ace, Card::T), r"TTAAA".into(),);
+        // High card
+        assert_eq!(
+            Hand::HighCard(Card::Six, Card::Five, Card::Four, Card::Three, Card::Two),
+            r"23456".into(),
         );
     }
 }
