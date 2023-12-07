@@ -48,32 +48,33 @@ impl From<&char> for Card {
         }
     }
 }
-#[derive(Debug, PartialEq)]
-enum Primary {
-    FiveOfAKind(Card),
-    FourOfAKind(Card, Card),
-    FullHouse(Card, Card),
-    // kkk q j -- group of three,  high card, low card
-    ThreeOfAKind(Card, Card, Card),
-    // kkk qq j -- pair1, pair2, high card
-    TwoPair(Card, Card, Card),
-    // kk 4,3, 2 -- pair remaing three singles
-    OnePair(Card, Card, Card, Card),
+#[derive(Debug, PartialOrd, PartialEq, Eq, Ord)]
+enum Hand {
     // High card -- remaining 4 singles
     HighCard(Card, Card, Card, Card, Card),
+    // kk 4,3, 2 -- pair remaing three singles
+    OnePair(Card, Card, Card, Card),
+    // kk qq 2 -- pair, pair, highcard
+    TwoPair(Card, Card, Card),
+    // kkk q j -- group of three,  high card, low card
+    ThreeOfAKind(Card, Card, Card),
+    // kkk qq j -- triple, pair, high card
+    FullHouse(Card, Card),
+    // kkkk two -- quad, high card
+    FourOfAKind(Card, Card),
+    /// From a shoe five aces are possible
+    FiveOfAKind(Card),
 }
 
-type Hand = [Card; 5];
-
-impl From<&str> for Primary {
-    fn from(line: &str) -> Primary {
+impl From<&str> for Hand {
+    fn from(line: &str) -> Hand {
         let mut hand = [Card::Two; 5];
         for (i, c) in line.chars().take(5).enumerate() {
             hand[i] = (&c).into();
         }
 
         let unique_cards: BTreeSet<Card> = hand.map(|c| c).into();
-        dbg!(&unique_cards);
+        // dbg!(&unique_cards);
 
         let mut histogram = BTreeMap::new();
         for uc in unique_cards {
@@ -92,7 +93,7 @@ impl From<&str> for Primary {
             }
         }
 
-        dbg!(&histogram);
+        // dbg!(&histogram);
 
         let heap: BinaryHeap<_> = histogram
             .iter()
@@ -106,7 +107,7 @@ impl From<&str> for Primary {
         let mut list = heap.into_sorted_vec();
         list.reverse();
 
-        dbg!(&list);
+        // dbg!(&list);
         // Extract from the histogram the most and second most common card.
 
         let mut iter = list.iter();
@@ -116,21 +117,21 @@ impl From<&str> for Primary {
         let r2_c2 = iter.next();
 
         let p = match (r1, r2_c2) {
-            (5, None) => Primary::FiveOfAKind(**c1),
-            (4, Some((_, c2))) => Primary::FourOfAKind(**c1, **c2),
-            (3, Some((&2, c2))) => Primary::FullHouse(**c1, **c2),
+            (5, None) => Hand::FiveOfAKind(**c1),
+            (4, Some((_, c2))) => Hand::FourOfAKind(**c1, **c2),
+            (3, Some((&2, c2))) => Hand::FullHouse(**c1, **c2),
             (3, Some((1, c2))) => {
                 // Three of a kind, plus high card, plus low cards
                 let (_, low_card) = iter.next().expect("must have low card");
-                Primary::ThreeOfAKind(**c1, **c2, **low_card)
+                Hand::ThreeOfAKind(**c1, **c2, **low_card)
             }
             (2, Some((2, c2))) => {
                 // two pair , plus high card
                 let (_, low_card) = iter.next().expect("must have low card");
                 if **c1 > **c2 {
-                    Primary::TwoPair(**c1, **c2, **low_card)
+                    Hand::TwoPair(**c1, **c2, **low_card)
                 } else {
-                    Primary::TwoPair(**c2, **c1, **low_card)
+                    Hand::TwoPair(**c2, **c1, **low_card)
                 }
             }
             (2, Some((1, spare0))) => {
@@ -138,7 +139,7 @@ impl From<&str> for Primary {
                 let (_, spare2) = iter.next().expect("must have low card");
                 let mut spares = [spare0, spare1, spare2];
                 spares.sort();
-                Primary::OnePair(**c1, **spares[2], **spares[1], **spares[0])
+                Hand::OnePair(**c1, **spares[2], **spares[1], **spares[0])
             }
             // Default to lowest hand possible
             (1, Some((1, spare0))) => {
@@ -146,7 +147,7 @@ impl From<&str> for Primary {
                 let mut other_spares = iter.map(|(_count, card)| card).collect::<Vec<&&Card>>();
                 spare.append(&mut other_spares);
                 spare.sort();
-                Primary::HighCard(**c1, **spare[3], **spare[2], **spare[1], **spare[0])
+                Hand::HighCard(**c1, **spare[3], **spare[2], **spare[1], **spare[0])
             }
 
             _ => {
@@ -154,7 +155,7 @@ impl From<&str> for Primary {
             }
         };
 
-        dbg!(&hand);
+        // dbg!(&hand);
         p
     }
 }
@@ -165,41 +166,61 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_pc() {
-        const TESTSET: [(Primary, &str); 7] = [
+    fn test_calc_hands() {
+        const TESTSET: [(Hand, &str); 7] = [
+            (Hand::TwoPair(Card::Three, Card::Two, Card::Four), "23432"),
             (
-                Primary::TwoPair(Card::Three, Card::Two, Card::Four),
-                "23432",
-            ),
-            (
-                Primary::OnePair(Card::Ace, Card::Four, Card::Three, Card::Two),
+                Hand::OnePair(Card::Ace, Card::Four, Card::Three, Card::Two),
                 "A23A4",
             ),
-            (Primary::FourOfAKind(Card::Ace, Card::Eight), "AA8AA"),
-            (Primary::FullHouse(Card::Three, Card::Two), "23332"),
+            (Hand::FourOfAKind(Card::Ace, Card::Eight), "AA8AA"),
+            (Hand::FullHouse(Card::Three, Card::Two), "23332"),
             (
-                Primary::ThreeOfAKind(Card::T, Card::Nine, Card::Eight),
+                Hand::ThreeOfAKind(Card::T, Card::Nine, Card::Eight),
                 "TTT98",
             ),
             (
-                Primary::HighCard(Card::Six, Card::Five, Card::Four, Card::Three, Card::Two),
+                Hand::HighCard(Card::Six, Card::Five, Card::Four, Card::Three, Card::Two),
                 "23456",
             ),
-            (Primary::FiveOfAKind(Card::Ace), "AAAAA"),
+            (Hand::FiveOfAKind(Card::Ace), "AAAAA"),
         ];
 
-        for (p, line) in TESTSET {
-            assert_eq!(p, line.into())
+        for (h, line) in TESTSET {
+            assert_eq!(h, line.into())
         }
     }
 
-    //     #[test]
-    //     fn example() {
-    //         let input = r"32T3K 765
-    // T55J5 684
-    // KK677 28
-    // KTJJT 220
-    // QQQJA 48";
-    //         assert_eq!(part1(input), 142u32)
-    //     }
+    #[test]
+    fn calc_rank() {
+        let input = r"32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 48";
+
+        let mut hands = input
+            .lines()
+            .map(|line| {
+                let (hand_str, bid_str) = line.split_once(' ').expect("one wite space");
+                let hand: Hand = hand_str.into();
+                let _bid = bid_str.parse::<u32>().expect("failed to parse bid");
+                hand
+            })
+            .collect::<Vec<Hand>>();
+        // Ranked hands are sorted hands.
+
+        dbg!(&hands);
+        hands.sort();
+
+        let expected_ranked_hanks = vec![
+            Hand::OnePair(Card::Three, Card::K, Card::T, Card::Two),
+            Hand::TwoPair(Card::J, Card::T, Card::K),
+            Hand::TwoPair(Card::K, Card::Seven, Card::Six),
+            Hand::ThreeOfAKind(Card::Five, Card::J, Card::T),
+            Hand::ThreeOfAKind(Card::Q, Card::Ace, Card::J),
+        ];
+
+        assert_eq!(expected_ranked_hanks, hands);
+    }
 }
