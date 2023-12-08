@@ -5,7 +5,7 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
-type Node = char;
+type Node = [char; 3];
 
 #[derive(Debug, PartialEq, Eq)]
 struct Map {
@@ -13,9 +13,12 @@ struct Map {
     nodes: HashMap<Node, (Node, Node)>,
 }
 
+const START: Node = ['A', 'A', 'A'];
+const END: Node = ['Z', 'Z', 'Z'];
+
 impl Map {
     fn walk(&self) -> usize {
-        let mut node: Node = 'A';
+        let mut node = START;
         let mut count = 0;
         for direction in self.pattern.chars().cycle() {
             let Some((l, r)) = self.nodes.get(&node) else {
@@ -28,7 +31,7 @@ impl Map {
             };
             count += 1;
             // dbg!(node, count);
-            if node == 'Z' {
+            if node == END {
                 break;
             }
             if count > 200 {
@@ -55,12 +58,12 @@ impl TryFrom<&str> for Map {
         let nodes: HashMap<Node, (Node, Node)> = lines
             .map(|line| {
                 //AAA = (BBB, BBB)
-                //0123456789ABCDEF
+                //012____789__CDE
                 let chars = line.chars().collect::<Vec<_>>();
 
-                let key: Node = chars[0usize];
-                let l: Node = chars[7usize];
-                let r: Node = chars[12usize];
+                let key: Node = [chars[0], chars[1], chars[2]];
+                let l: Node = [chars[7], chars[8], chars[9]];
+                let r: Node = [chars[12], chars[13], chars[14]];
                 (key, (l, r))
             })
             .collect();
@@ -88,10 +91,15 @@ AAA = (BBB, BBB)
 BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)";
 
+        let node_b = ['B', 'B', 'B'];
         let actual = input.try_into();
         let expected = Ok(Map {
             pattern: String::from("LLR"),
-            nodes: HashMap::from([('A', ('B', 'B')), ('B', ('A', 'Z')), ('Z', ('Z', 'Z'))]),
+            nodes: HashMap::from([
+                (START, (node_b, node_b)),
+                (node_b, (START, END)),
+                (END, (END, END)),
+            ]),
         });
 
         assert_eq!(actual, expected);
