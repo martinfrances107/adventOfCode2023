@@ -52,3 +52,8 @@ Here i want to create an assembley of algorithms which are considered best in cl
             Two iterators are ".zip()ed' and fed into a .product() call with out any
             intermediate value ever being ".collected()".
             Part 2: Just demonstates that u32 overflow.
+
+- Day  7 - Part1 Refactor PartialOrd is verbose
+           I think I can find a 5 lines replacement for it.
+
+- Day  8 -
