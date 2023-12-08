@@ -34,7 +34,7 @@ impl Map {
             if node == END {
                 break;
             }
-            if count > 200 {
+            if count > 200000 {
                 panic!("opps looping");
             }
         }
