@@ -18,30 +18,31 @@ impl Map {
         let mut nodes = starting_nodes;
         let mut count: u128 = 0;
         for direction in self.pattern.chars().cycle() {
-            let new_nodes = nodes
-                .iter()
+            let at_end = nodes
+                .iter_mut()
                 .map(|node| {
                     let Some((l, r)) = self.nodes.get(node) else {
                         dbg!(&node);
-                        panic!("multiwalk: malformed node");
+                        panic!("multiwalk: malformed map.nodes");
                     };
-                    match direction {
+                    // Mutate in place.
+                    *node = match direction {
                         'L' => *l,
                         'R' => *r,
                         _ => panic!("unexpected direction"),
-                    }
+                    };
+                    node[2] == 'Z'
                 })
-                .collect::<Vec<_>>();
+                .fold(true, |status, end_in_z| status && end_in_z);
 
             count += 1;
 
-            if new_nodes.iter().all(|n| n[2] == 'Z') {
+            if at_end {
                 break;
             }
             if count > 200_00_000_000 {
                 panic!("opps looping");
             }
-            nodes = new_nodes;
         }
         count
     }
@@ -66,7 +67,6 @@ impl TryFrom<&str> for Map {
 
         let pattern = lines.next().expect("must have pattern").to_owned();
         let _blank = lines.next().expect("Must have a least a blank line");
-        // todo!();
         let nodes: HashMap<Node, (Node, Node)> = lines
             .map(|line| {
                 //AAA = (BBB, BBB)
@@ -149,7 +149,6 @@ XXX = (XXX, XXX)";
         starting_nodes.sort();
 
         assert_eq!(starting_nodes, expected_starting_nodes);
-        // let final_nodes = map.get_nodes_ending('Z');
         let expected = map.multiwalk(starting_nodes);
         assert_eq!(expected, 6);
     }
