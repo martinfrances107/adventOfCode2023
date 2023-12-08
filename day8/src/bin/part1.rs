@@ -13,6 +13,32 @@ struct Map {
     nodes: HashMap<Node, (Node, Node)>,
 }
 
+impl Map {
+    fn walk(&self) -> usize {
+        let mut node: Node = 'A';
+        let mut count = 0;
+        for direction in self.pattern.chars().cycle() {
+            let Some((l, r)) = self.nodes.get(&node) else {
+                panic!("malformed node");
+            };
+            node = match direction {
+                'L' => *l,
+                'R' => *r,
+                _ => panic!("unexpected direction"),
+            };
+            count += 1;
+            // dbg!(node, count);
+            if node == 'Z' {
+                break;
+            }
+            if count > 200 {
+                panic!("opps looping");
+            }
+        }
+        count
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct NodeErr;
 
@@ -44,7 +70,9 @@ impl TryFrom<&str> for Map {
 }
 fn part1(input: &str) -> u32 {
     let map: Map = input.try_into().expect("Must be able to decode a map.");
-    1u32
+    let n_steps = map.walk();
+
+    n_steps as u32
 }
 
 #[cfg(test)]
@@ -68,13 +96,15 @@ ZZZ = (ZZZ, ZZZ)";
 
         assert_eq!(actual, expected);
     }
-    // #[test]
-    // fn example() {
-    //     let input = r"
-    //     1abc2
-    //     pqr3stu8vwx
-    //     a1b2c3d4e5f
-    //     treb7uchet";
-    //     assert_eq!(part1(input), 142u32)
-    // }
+    #[test]
+    fn walk() {
+        let input = r"LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)";
+        let map: Map = input.try_into().expect("bad map");
+        let expected = map.walk();
+        assert_eq!(expected, 6usize);
+    }
 }
