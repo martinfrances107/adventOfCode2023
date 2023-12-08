@@ -32,7 +32,6 @@ fn part1(input: &str) -> u64 {
         })
         .collect::<Vec<_>>();
 
-    dbg!(&data);
     data.iter().sum()
 }
 
@@ -172,7 +171,6 @@ impl From<&str> for Hand {
         }
 
         let unique_cards: BTreeSet<Card> = hand.map(|c| c).into();
-        // dbg!(&unique_cards);
 
         let mut histogram = BTreeMap::new();
         for uc in unique_cards {
@@ -191,8 +189,6 @@ impl From<&str> for Hand {
             }
         }
 
-        // dbg!(&histogram);
-
         let heap: BinaryHeap<_> = histogram
             .iter()
             .map(|(card, count)| {
@@ -205,7 +201,6 @@ impl From<&str> for Hand {
         let mut list = heap.into_sorted_vec();
         list.reverse();
 
-        // dbg!(&list);
         // Extract from the histogram the most and second most common card.
 
         let mut iter = list.iter();
@@ -214,7 +209,6 @@ impl From<&str> for Hand {
             .expect("There must always be a primary grouping");
         let r2_c2 = iter.next();
 
-        // dbg!(&hand);
         match (r1, r2_c2) {
             (5, None) => Hand::FiveOfAKind(hand),
             (4, Some((1, _c2))) => Hand::FourOfAKind(hand),
@@ -280,7 +274,6 @@ QQQJA 48";
             .collect::<Vec<Hand>>();
         // Ranked hands are sorted hands.
 
-        dbg!(&hands);
         hands.sort();
 
         let expected_ranked_hanks = vec![
