@@ -2,7 +2,7 @@ use core::fmt::Display;
 use core::fmt::Formatter;
 
 fn main() {
-    let input = include_str!("./input1.txt");
+    let input = include_str!("./sample.txt");
     println!("{:?}", part1(input));
 }
 
@@ -45,7 +45,8 @@ struct PipeMap {
 
 impl Display for PipeMap {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for r in &self.output {
+        for (i, r) in self.output.iter().enumerate() {
+            write!(f, "{i} :");
             for c in r.iter() {
                 write!(f, "{c}")?;
             }
@@ -94,13 +95,17 @@ impl From<&str> for PipeMap {
             .collect::<Vec<Vec<char>>>();
 
         match (start_row_index, start_col_index) {
-            (Some(start_row_index), Some(start_col_index)) => Self {
-                row,
-                start_row_index,
-                start_col_index,
-                output,
-                next_digit: 0,
-            },
+            (Some(start_row_index), Some(start_col_index)) => {
+                output[start_row_index][start_col_index] = 'S';
+
+                Self {
+                    row,
+                    start_row_index,
+                    start_col_index,
+                    output,
+                    next_digit: 0,
+                }
+            }
             _ => {
                 panic!("Must have found a start symbol");
             }
@@ -109,6 +114,9 @@ impl From<&str> for PipeMap {
 }
 
 impl PipeMap {
+    fn at_start(&self, row_index: usize, col_index: usize) -> bool {
+        self.start_row_index == row_index && self.start_col_index == col_index
+    }
     fn walk(&mut self, state: State) -> State {
         // walk round the clock looking for the exit.
         let mut next_blocked_direction = state.blocked_direction;
@@ -119,6 +127,10 @@ impl PipeMap {
                 row_index = (state.row_index as i64 + d.row_inc) as usize;
                 if let Some(row) = self.row.get(row_index) {
                     col_index = (state.col_index as i64 + d.col_inc) as usize;
+
+                    // dbg!(&row_index);
+                    // dbg!(&col_index);
+                    // if row_index > 122 {}
                     // pe - The current pipe element under consideration.
                     if let Some(pe) = row.get(col_index) {
                         // if we have found the exit and can compute the next
@@ -126,41 +138,38 @@ impl PipeMap {
                         match i {
                             0 => {
                                 if *pe == '|' || *pe == 'F' || *pe == '7' {
+                                    dbg!("north bound");
                                     next_blocked_direction = Some(2);
-                                    self.next_digit = (self.next_digit + 1) % 10;
-                                    if self.next_digit % 2 == 0 {
-                                        self.output[row_index][col_index] = DIGITS[self.next_digit];
-                                    }
+
+                                    self.output[row_index][col_index] = *pe;
+
                                     break;
                                 }
                             }
                             1 => {
                                 if *pe == '-' || *pe == '7' || *pe == 'J' {
+                                    dbg!("east bound");
                                     next_blocked_direction = Some(3);
-                                    self.next_digit = (self.next_digit + 1) % 10;
-                                    if self.next_digit % 2 == 0 {
-                                        self.output[row_index][col_index] = DIGITS[self.next_digit];
-                                    }
+                                    self.output[row_index][col_index] = *pe;
+
                                     break;
                                 }
                             }
                             2 => {
                                 if *pe == '|' || *pe == 'J' || *pe == 'L' {
+                                    dbg!("sound bound");
                                     next_blocked_direction = Some(0);
-                                    self.next_digit = (self.next_digit + 1) % 10;
-                                    if self.next_digit % 2 == 0 {
-                                        self.output[row_index][col_index] = DIGITS[self.next_digit];
-                                    }
+                                    self.output[row_index][col_index] = *pe;
+
                                     break;
                                 }
                             }
                             3 => {
                                 if *pe == '-' || *pe == 'F' || *pe == 'L' {
+                                    dbg!("west bound");
                                     next_blocked_direction = Some(1);
-                                    self.next_digit = (self.next_digit + 1) % 10;
-                                    if self.next_digit % 2 == 0 {
-                                        self.output[row_index][col_index] = DIGITS[self.next_digit];
-                                    }
+                                    self.output[row_index][col_index] = *pe;
+
                                     break;
                                 }
                             }
@@ -215,16 +224,23 @@ fn part1(input: &str) -> u32 {
     //To keep in sync also push the second walker down the pipe.
     second_walker = map.walk(second_walker);
 
+    let mut lc = 0;
     loop {
         // Advance each walker until the share the same location again .. at the mid point of the loop.
         first_walker = map.walk(first_walker);
-        second_walker = map.walk(second_walker);
+        // second_walker = map.walk(second_walker);
+
         if first_walker.position_match(&second_walker) {
+            break;
+        }
+
+        lc += 1;
+        if lc > 60 {
             break;
         }
     }
     // dbg!(&first_walker);
-    assert_eq!(first_walker.distance, second_walker.distance);
+    // assert_eq!(first_walker.distance, second_walker.distance);
     println!("{map}");
     first_walker.distance
 }
