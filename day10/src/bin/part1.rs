@@ -51,18 +51,18 @@ impl PipeMap {
     fn walk(&self, state: State) -> State {
         // walk round the clock looking for the exit.
         let mut next_blocked_direction = state.blocked_direction;
-        let mut next_x_index = i16::MAX;
-        let mut next_y_index = i16::MAX;
+        let mut x = i16::MAX;
+        let mut y = i16::MAX;
         for (i, d) in DIRECTION.iter().enumerate() {
             if Some(i) != state.blocked_direction {
-                next_x_index = state.x as i16 + d.0;
-                if next_x_index >= 0 {
-                    next_y_index = state.y as i16 + d.1;
-                    if next_y_index >= 0 {
+                x = state.x as i16 + d.0;
+                if x >= 0 {
+                    y = state.y as i16 + d.1;
+                    if y >= 0 {
                         // The current pipe element under consideration.
-                        let pe = self.row[next_y_index as usize][next_x_index as usize];
-                        dbg!(next_x_index);
-                        dbg!(next_y_index);
+                        let pe = self.row[y as usize][x as usize];
+                        dbg!(x);
+                        dbg!(y);
                         dbg!(pe);
                         // if we have found the exit and can compute the next
                         // backward direction
@@ -99,13 +99,12 @@ impl PipeMap {
                 }
             }
         }
-        let new_state = State {
+        State {
             distance: state.distance + 1,
-            x: next_x_index as usize,
-            y: next_y_index as usize,
+            x: x as usize,
+            y: y as usize,
             blocked_direction: next_blocked_direction,
-        };
-        new_state
+        }
     }
 }
 
