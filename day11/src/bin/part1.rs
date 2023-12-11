@@ -167,6 +167,23 @@ impl StarMap {
             }
         }
 
+        // The galaxies have shifted recompute positions
+        // TODO double looping, can I loop just once?
+        for (new_row_index, row) in rows.iter_mut().enumerate() {
+            for (new_col_index, cell) in row.iter_mut().enumerate() {
+                match cell {
+                    Cell::Galaxy(Galaxy {
+                        id,
+                        row_index,
+                        col_index,
+                    }) => {
+                        *row_index = new_row_index;
+                        *col_index = new_col_index;
+                    }
+                    Cell::Blank => {}
+                }
+            }
+        }
         Self { rows }
     }
 
