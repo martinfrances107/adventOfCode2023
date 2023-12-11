@@ -8,7 +8,7 @@ fn main() {
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Cell {
     Blank,
-    Galaxy,
+    Galaxy(u64),
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -50,6 +50,8 @@ impl Display for StarMap {
 }
 impl From<&str> for StarMap {
     fn from(input: &str) -> Self {
+        // The next start id is zero;
+        let mut start_id = 0u64;
         let rows = input
             .lines()
             .map(|line| {
@@ -58,7 +60,8 @@ impl From<&str> for StarMap {
                         if c == '.' {
                             Cell::Blank
                         } else if c == '#' {
-                            Cell::Galaxy
+                            start_id += 1;
+                            Cell::Galaxy(start_id)
                         } else {
                             panic!("malfomed map.");
                         }
@@ -77,7 +80,10 @@ impl StarMap {
             .iter()
             .enumerate()
             .filter_map(|(row_id, row)| {
-                if row.iter().any(|cell| *cell == Cell::Galaxy) {
+                if row.iter().any(|cell| match *cell {
+                    Cell::Galaxy(_) => true,
+                    Cell::Blank => false,
+                }) {
                     None
                 } else {
                     Some(row_id)
@@ -93,8 +99,11 @@ impl StarMap {
 
         for row in self.rows.iter() {
             for (col_index, cell) in row.iter().enumerate() {
-                if *cell == Cell::Galaxy {
-                    col_count[col_index] += 1;
+                match *cell {
+                    Cell::Galaxy(_) => {
+                        col_count[col_index] += 1;
+                    }
+                    Cell::Blank => {}
                 }
             }
         }
