@@ -150,7 +150,7 @@ impl StarMap {
 
     fn expand(self, blank_rows: &[usize], blank_cols: &[usize]) -> Self {
         let n_rows = self.rows.len();
-        let mut expanded_map: Vec<Vec<Cell>> = Vec::with_capacity(n_rows);
+        let mut rows: Vec<Vec<Cell>> = Vec::with_capacity(n_rows);
         for (row_index, row) in self.rows.iter().enumerate() {
             let mut new_row: Vec<Cell> = Vec::with_capacity(n_rows);
             for (col_index, cell) in row.iter().enumerate() {
@@ -160,18 +160,18 @@ impl StarMap {
                 }
             }
             if blank_rows.contains(&row_index) {
-                expanded_map.push(new_row.clone());
-                expanded_map.push(new_row);
+                rows.push(new_row.clone());
+                rows.push(new_row);
             } else {
-                expanded_map.push(new_row);
+                rows.push(new_row);
             }
         }
 
-        Self { rows: expanded_map }
+        Self { rows }
     }
 
+    // Return list of galaxies found in the map.
     fn get_galaxy_list(&self) -> Vec<Galaxy> {
-        // find galaxies
         let galaxy_list = self
             .rows
             .iter()
@@ -196,7 +196,7 @@ impl StarMap {
             for item in &g_list {
                 pairings.push((current, *item));
             }
-            // dbg!(&pairings);
+
             if let Some(n) = g_list.pop_front() {
                 current = n;
             } else {
@@ -211,21 +211,30 @@ impl StarMap {
         let v = (a.col_index as i128 - b.col_index as i128).abs();
         h + v
     }
+
+    fn compute_min_distances(&self) -> Vec<i128> {
+        let gl = self.get_galaxy_list();
+        let pairings = StarMap::compute_parings(&gl);
+
+        let min_distances = pairings
+            .iter()
+            .map(|(g0, g1)| StarMap::compute_manhatten_distance(g0, g1))
+            .collect::<Vec<_>>();
+
+        min_distances
+    }
 }
 
 fn part1(input: &str) -> i128 {
     let map: StarMap = input.into();
-
-    let gl = map.get_galaxy_list();
-    let pairings = StarMap::compute_parings(&gl);
-
-    let min_distances = pairings
-        .iter()
-        .map(|(g0, g1)| StarMap::compute_manhatten_distance(g0, g1))
-        .collect::<Vec<_>>();
-
-    let min_d: i128 = min_distances.iter().sum();
-    min_d
+    let pre_min_distances: i128 = map.compute_min_distances().iter().sum();
+    dbg!(pre_min_distances);
+    let blank_rows = map.collect_blank_rows();
+    let blank_cols = map.collect_blank_cols();
+    dbg!(&blank_rows);
+    dbg!(&blank_cols);
+    let expanded_map = map.expand(&blank_rows, &blank_cols);
+    expanded_map.compute_min_distances().iter().sum()
 }
 
 #[cfg(test)]
@@ -398,7 +407,9 @@ mod test {
 .........#...
 #....#.......";
 
-        let min_d = part1(input);
+        let map: StarMap = input.into();
+
+        let min_d: i128 = map.compute_min_distances().iter().sum();
         assert_eq!(min_d, 374i128);
     }
 }
