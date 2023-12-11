@@ -213,13 +213,19 @@ impl StarMap {
     }
 }
 
-fn part1(input: &str) -> u32 {
+fn part1(input: &str) -> i128 {
     let map: StarMap = input.into();
-    let blank_rows = map.collect_blank_rows();
-    let blank_cols = map.collect_blank_cols();
-    let _expanded_map = map.expand(&blank_rows, &blank_cols);
 
-    todo!();
+    let gl = map.get_galaxy_list();
+    let pairings = StarMap::compute_parings(&gl);
+
+    let min_distances = pairings
+        .iter()
+        .map(|(g0, g1)| StarMap::compute_manhatten_distance(g0, g1))
+        .collect::<Vec<_>>();
+
+    let min_d: i128 = min_distances.iter().sum();
+    min_d
 }
 
 #[cfg(test)]
@@ -391,17 +397,8 @@ mod test {
 .............
 .........#...
 #....#.......";
-        let map: StarMap = input.into();
 
-        let gl = map.get_galaxy_list();
-        let pairings = StarMap::compute_parings(&gl);
-
-        let min_distances = pairings
-            .iter()
-            .map(|(g0, g1)| StarMap::compute_manhatten_distance(g0, g1))
-            .collect::<Vec<_>>();
-
-        let min_d: i128 = min_distances.iter().sum();
+        let min_d = part1(input);
         assert_eq!(min_d, 374i128);
     }
 }
