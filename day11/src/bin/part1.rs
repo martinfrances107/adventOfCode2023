@@ -361,6 +361,18 @@ mod test {
 
         let gl = map.get_galaxy_list();
         let pairings = StarMap::compute_parings(&gl);
+
+        let pairings = StarMap::compute_parings(&gl);
+        let (g5, g9) = pairings
+            .iter()
+            .find(|pair| {
+                let (g0, g1) = **pair;
+                g0.id == 5 && g1.id == 9
+            })
+            .unwrap();
+        let d_g5_g9 = StarMap::compute_manhatten_distance(g5, g9);
+        assert_eq!(d_g5_g9, 9);
+
         let (g1, g7) = pairings
             .iter()
             .find(|pair| {
