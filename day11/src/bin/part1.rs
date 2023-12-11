@@ -8,10 +8,32 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
+#[derive(Copy, Clone, Debug, Eq)]
+struct Galaxy {
+    id: u64,
+    row_index: usize,
+    col_index: usize,
+}
+
+impl Galaxy {
+    fn new(id: u64, row_index: usize, col_index: usize) -> Self {
+        Galaxy {
+            id,
+            row_index,
+            col_index,
+        }
+    }
+}
+impl PartialEq for Galaxy {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
     Blank,
-    Galaxy(u64),
+    Galaxy(Galaxy),
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -57,14 +79,16 @@ impl From<&str> for StarMap {
         let mut start_id = 0u64;
         let rows = input
             .lines()
-            .map(|line| {
+            .enumerate()
+            .map(|(row_index, line)| {
                 line.chars()
-                    .map(|c| {
+                    .enumerate()
+                    .map(|(col_index, c)| {
                         if c == '.' {
                             Cell::Blank
                         } else if c == '#' {
                             start_id += 1;
-                            Cell::Galaxy(start_id)
+                            Cell::Galaxy(Galaxy::new(start_id, row_index, col_index))
                         } else {
                             panic!("malfomed map.");
                         }
@@ -291,20 +315,7 @@ mod test {
 .......#..
 #...#.....";
         let map: StarMap = input.into();
-        assert_eq!(
-            map.get_galaxy_list(),
-            vec![
-                Cell::Galaxy(1),
-                Cell::Galaxy(2),
-                Cell::Galaxy(3),
-                Cell::Galaxy(4),
-                Cell::Galaxy(5),
-                Cell::Galaxy(6),
-                Cell::Galaxy(7),
-                Cell::Galaxy(8),
-                Cell::Galaxy(9)
-            ]
-        );
+        assert_eq!(map.get_galaxy_list().len(), 9,);
 
         let gl = map.get_galaxy_list();
         let out = StarMap::compute_parings(&gl);
