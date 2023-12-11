@@ -1,5 +1,8 @@
 use core::fmt::Debug;
 use core::fmt::Display;
+
+use std::collections::VecDeque;
+
 fn main() {
     let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
@@ -159,6 +162,25 @@ impl StarMap {
             .collect::<Vec<Cell>>();
         galaxy_list
     }
+
+    fn compute_parings(g_list: &Vec<Cell>) -> Vec<(Cell, Cell)> {
+        let mut g_list: VecDeque<Cell> = (*g_list).clone().into();
+        let mut pairings: Vec<(Cell, Cell)> = vec![];
+
+        let mut current = g_list.pop_front().unwrap();
+        loop {
+            for item in &g_list {
+                pairings.push((current, *item));
+            }
+            dbg!(&pairings);
+            if let Some(n) = g_list.pop_front() {
+                current = n;
+            } else {
+                break;
+            }
+        }
+        pairings
+    }
 }
 
 fn part1(input: &str) -> u32 {
@@ -257,7 +279,7 @@ mod test {
     }
 
     #[test]
-    fn test_galaxy_list() {
+    fn test_galaxy_pairings() {
         let input = r"...#......
 .......#..
 #.........
@@ -282,6 +304,10 @@ mod test {
                 Cell::Galaxy(8),
                 Cell::Galaxy(9)
             ]
-        )
+        );
+
+        let gl = map.get_galaxy_list();
+        let out = StarMap::compute_parings(&gl);
+        assert_eq!(out.len(), 36);
     }
 }
