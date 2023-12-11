@@ -8,7 +8,7 @@ Here i want to create an assembley of algorithms which are considered best in cl
 
 ##  State of the Art Tooling.
 
-"dhat" etc to profile the solutions
+"dhat" Criterion etc to profile the solutions
 
 ## Notes
 
@@ -32,8 +32,7 @@ Here i want to create an assembley of algorithms which are considered best in cl
 - Day  4 - The current solution is slow ( 8s (release mode) for part 2 )
            Needs Refactor
                 Collect winnings and playable numbers in two HashSets
-                precompute and store the result... at present I compute in the
-                worst case senario.
+                precompute and store the result... at present I compute in the worst case senario.
                 Minimal "Card" should be a list of card offset to "copy"
                 Looking using "fold"
 
@@ -48,12 +47,54 @@ Here i want to create an assembley of algorithms which are considered best in cl
                -- must remove all .collect() calls and remove memory usage.
                -- Use rayon .. and compute all seed blocks in parallel?
 
-- Day  6 - Part 1:  An good example of a small memory footprint.
+- Day  6 - Part 1: An good example of a small memory footprint.
             Two iterators are ".zip()ed' and fed into a .product() call with out any
             intermediate value ever being ".collected()".
             Part 2: Just demonstates that u32 overflow.
 
 - Day  7 - Part1 Refactor PartialOrd is verbose
            I think I can find a 5 lines replacement for it.
+           Itertools.counts() creates a histogram I clumsily implemented
+           the histogram.
 
 - Day  8 -
+
+- Day  9 - Part1 Refactor,
+           For these toy examples in it not a problem, but I am consuming way too much memory. [ it does not scale for large lines of numbers.]
+           IterTools -- I could use a tuple_window() to have a sliding window
+           of value(i) and value(i-1) useful when creating the diff.
+           Then I can store only the latest diff.
+
+Day 10 - Needs major recator to get part1!
+
+        |
+        FJ
+
+        have identified this as the pathalogcal case
+        from J to F should be downwards, but up is taken
+
+        Need to add a method to at the start inspect the s tile
+        and return the ports...
+
+        then refacotor the massive switch statement.
+
+Day 11 -
+
+## Observations
+
+Using "Itertools" as a example of good library code
+
+functions that use std function like HashMap should signal to the compiler that they do. "use_std"
+
+```rustlang
+    #[cfg(feature = "use_std")]
+    fn counts(self) -> HashMap<Self::Item, usize>
+    where
+        Self: Sized,
+        Self::Item: Eq + Hash,
+    {
+        let mut counts = HashMap::new();
+        self.for_each(|item| *counts.entry(item).or_default() += 1);
+        counts
+    }
+```

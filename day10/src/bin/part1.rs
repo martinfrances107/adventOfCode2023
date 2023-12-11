@@ -46,7 +46,7 @@ struct PipeMap {
 impl Display for PipeMap {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         for (i, r) in self.output.iter().enumerate() {
-            write!(f, "{i} :");
+            // write!(f, "{i} :");
             for c in r.iter() {
                 write!(f, "{c}")?;
             }
@@ -59,7 +59,7 @@ impl Display for PipeMap {
 struct State {
     row_index: usize,
     col_index: usize,
-    blocked_direction: Option<usize>,
+    in_dir: Option<usize>,
     distance: u32,
 }
 
@@ -119,11 +119,11 @@ impl PipeMap {
     }
     fn walk(&mut self, state: State) -> State {
         // walk round the clock looking for the exit.
-        let mut next_blocked_direction = state.blocked_direction;
+        // let mut next_blocked_direction = state.in_dir;
         let mut row_index = 0usize;
         let mut col_index = 0usize;
-        for (i, d) in DIRECTION.iter().enumerate() {
-            if Some(i) != state.blocked_direction {
+        for (dir_test, d) in DIRECTION.iter().enumerate() {
+            if Some(dir_test) != state.in_dir {
                 row_index = (state.row_index as i64 + d.row_inc) as usize;
                 if let Some(row) = self.row.get(row_index) {
                     col_index = (state.col_index as i64 + d.col_inc) as usize;
@@ -135,43 +135,63 @@ impl PipeMap {
                     if let Some(pe) = row.get(col_index) {
                         // if we have found the exit and can compute the next
                         // backward direction
-                        match i {
-                            0 => {
-                                if *pe == '|' || *pe == 'F' || *pe == '7' {
-                                    dbg!("north bound");
-                                    next_blocked_direction = Some(2);
-
-                                    self.output[row_index][col_index] = *pe;
-
-                                    break;
-                                }
+                        dbg!(dir_test);
+                        dbg!(&pe);
+                        match (dir_test, pe) {
+                            (0, '|') => {
+                                next_blocked_direction = Some(2);
+                                break;
                             }
-                            1 => {
-                                if *pe == '-' || *pe == '7' || *pe == 'J' {
-                                    dbg!("east bound");
-                                    next_blocked_direction = Some(3);
-                                    self.output[row_index][col_index] = *pe;
-
-                                    break;
-                                }
+                            (0, '-') => {}
+                            (0, 'F') => {}
+                            (0, '7') => {}
+                            (0, 'J') => {
+                                next_blocked_direction = Some(2);
+                                break;
                             }
-                            2 => {
-                                if *pe == '|' || *pe == 'J' || *pe == 'L' {
-                                    dbg!("sound bound");
-                                    next_blocked_direction = Some(0);
-                                    self.output[row_index][col_index] = *pe;
-
-                                    break;
-                                }
+                            (0, 'L') => {
+                                next_blocked_direction = Some(2);
+                                break;
                             }
-                            3 => {
-                                if *pe == '-' || *pe == 'F' || *pe == 'L' {
-                                    dbg!("west bound");
-                                    next_blocked_direction = Some(1);
-                                    self.output[row_index][col_index] = *pe;
+                            (1, '|') => {}
+                            (1, '-') => {
+                                next_blocked_direction = Some(3);
+                                break;
+                            }
+                            (1, 'F') => {}
+                            (1, '7') => {
+                                next_blocked_direction = Some(3);
+                                break;
+                            }
+                            (1, 'J') => {
+                                next_blocked_direction = Some(3);
+                                break;
+                            }
+                            (1, 'L') => {}
 
-                                    break;
-                                }
+                            (2, '|') => {
+                                next_blocked_direction = Some(0);
+                                break;
+                            }
+                            (2, '-') => {}
+                            (2, 'F') => {
+                                next_blocked_direction = Some(1);
+                                break;
+                            }
+                            (2, '7') => {
+                                next_blocked_direction = Some(3);
+                                break;
+                            }
+                            (2, 'J') => {}
+                            (2, 'L') => {}
+                            (3, '|') => {}
+                            (3, '-') => next_blocked_direction = Some(1),
+                            (3, 'F') => {}
+                            (3, '7') => next_blocked_direction = Some(2),
+                            (3, 'J') => next_blocked_direction = Some(0),
+                            (3, 'L') => {}
+                            (_, '.') => {
+                                // can't do anything with a blank.
                             }
                             _ => {
                                 panic!("invalid direction");
@@ -188,7 +208,7 @@ impl PipeMap {
             distance: state.distance + 1,
             row_index,
             col_index,
-            blocked_direction: next_blocked_direction,
+            in_dir: next_blocked_direction,
         }
     }
 }
@@ -199,15 +219,15 @@ fn part1(input: &str) -> u32 {
         distance: 0,
         row_index: map.start_row_index,
         col_index: map.start_col_index,
-        blocked_direction: None,
+        in_dir: None,
     };
 
     // Advance first machine into the pipe.
     first_walker = map.walk(first_walker);
 
     // which path should be block when starting the second walker?
-    dbg!(first_walker.blocked_direction);
-    let bd = match first_walker.blocked_direction {
+    dbg!(first_walker.in_dir);
+    let bd = match first_walker.in_dir {
         Some(0) => Some(2),
         Some(1) => Some(3),
         Some(2) => Some(0),
@@ -219,7 +239,7 @@ fn part1(input: &str) -> u32 {
         distance: 0,
         row_index: map.start_row_index,
         col_index: map.start_col_index,
-        blocked_direction: bd,
+        in_dir: bd,
     };
     //To keep in sync also push the second walker down the pipe.
     second_walker = map.walk(second_walker);
@@ -235,7 +255,8 @@ fn part1(input: &str) -> u32 {
         }
 
         lc += 1;
-        if lc > 60 {
+        // 32 is a good place to stop
+        if lc > 44 {
             break;
         }
     }
@@ -263,7 +284,7 @@ LJ...";
             distance: 0,
             row_index: map.start_row_index,
             col_index: map.start_col_index,
-            blocked_direction: None,
+            in_dir: None,
         };
 
         let first_path_state = map.walk(start);
@@ -275,7 +296,7 @@ LJ...";
                 distance: 1,
                 row_index: 2,
                 col_index: 1,
-                blocked_direction: Some(3)
+                in_dir: Some(3)
             }
         );
 
@@ -283,7 +304,7 @@ LJ...";
             distance: 0,
             row_index: map.start_row_index,
             col_index: map.start_col_index,
-            blocked_direction: Some(1),
+            in_dir: Some(1),
         };
         let second_path_state = map.walk(second_start);
         assert_eq!(
@@ -292,7 +313,7 @@ LJ...";
                 distance: 1,
                 row_index: 3,
                 col_index: 0,
-                blocked_direction: Some(0)
+                in_dir: Some(0)
             }
         );
     }
@@ -313,7 +334,7 @@ LJ...";
             distance: 0,
             row_index: map.start_row_index,
             col_index: map.start_col_index,
-            blocked_direction: None,
+            in_dir: None,
         };
 
         let first_path_state = map.walk(start);
@@ -325,7 +346,7 @@ LJ...";
                 distance: 1,
                 row_index: 2,
                 col_index: 4,
-                blocked_direction: Some(2)
+                in_dir: Some(2)
             }
         );
 
@@ -333,7 +354,7 @@ LJ...";
             distance: 0,
             row_index: map.start_row_index,
             col_index: map.start_col_index,
-            blocked_direction: Some(0),
+            in_dir: Some(0),
         };
         let second_path_state = map.walk(second_start);
         assert_eq!(
@@ -342,7 +363,7 @@ LJ...";
                 distance: 1,
                 row_index: 3,
                 col_index: 3,
-                blocked_direction: Some(1)
+                in_dir: Some(1)
             }
         );
 
