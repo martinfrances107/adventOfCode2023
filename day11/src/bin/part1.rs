@@ -173,7 +173,7 @@ impl StarMap {
             for (new_col_index, cell) in row.iter_mut().enumerate() {
                 match cell {
                     Cell::Galaxy(Galaxy {
-                        id,
+                        id: _id,
                         row_index,
                         col_index,
                     }) => {
@@ -244,12 +244,10 @@ impl StarMap {
 
 fn part1(input: &str) -> i128 {
     let map: StarMap = input.into();
-    let pre_min_distances: i128 = map.compute_min_distances().iter().sum();
-    dbg!(pre_min_distances);
+
     let blank_rows = map.collect_blank_rows();
     let blank_cols = map.collect_blank_cols();
-    dbg!(&blank_rows);
-    dbg!(&blank_cols);
+
     let expanded_map = map.expand(&blank_rows, &blank_cols);
     expanded_map.compute_min_distances().iter().sum()
 }

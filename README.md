@@ -76,9 +76,10 @@ Day 10 - Needs major recator to get part1!
         Need to add a method to at the start inspect the s tile
         and return the ports...
 
-        then refacotor the massive switch statement.
+        then refactor the massive switch statement.
 
-Day 11 -
+Day 11 - Good use of filter_map
+         Refactor -- .expand() had a double loop I could remove.
 
 ## Observations
 
