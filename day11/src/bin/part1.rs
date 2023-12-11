@@ -375,7 +375,6 @@ mod test {
         let map: StarMap = input.into();
 
         let gl = map.get_galaxy_list();
-        let pairings = StarMap::compute_parings(&gl);
 
         let pairings = StarMap::compute_parings(&gl);
         let (g5, g9) = pairings
