@@ -170,7 +170,7 @@ impl StarMap {
         Self { rows: expanded_map }
     }
 
-    fn get_galaxy_list(&self) -> Vec<Cell> {
+    fn get_galaxy_list(&self) -> Vec<Galaxy> {
         // find galaxies
         let galaxy_list = self
             .rows
@@ -179,24 +179,24 @@ impl StarMap {
                 row.iter()
                     .filter_map(|cell| match cell {
                         Cell::Blank => None,
-                        Cell::Galaxy(id) => Some(Cell::Galaxy(*id)),
+                        Cell::Galaxy(galaxy) => Some(*galaxy),
                     })
-                    .collect::<Vec<Cell>>()
+                    .collect::<Vec<Galaxy>>()
             })
-            .collect::<Vec<Cell>>();
+            .collect::<Vec<Galaxy>>();
         galaxy_list
     }
 
-    fn compute_parings(g_list: &Vec<Cell>) -> Vec<(Cell, Cell)> {
-        let mut g_list: VecDeque<Cell> = (*g_list).clone().into();
-        let mut pairings: Vec<(Cell, Cell)> = vec![];
+    fn compute_parings(g_list: &Vec<Galaxy>) -> Vec<(Galaxy, Galaxy)> {
+        let mut g_list: VecDeque<Galaxy> = (*g_list).clone().into();
+        let mut pairings: Vec<(Galaxy, Galaxy)> = vec![];
 
         let mut current = g_list.pop_front().unwrap();
         loop {
             for item in &g_list {
                 pairings.push((current, *item));
             }
-            dbg!(&pairings);
+            // dbg!(&pairings);
             if let Some(n) = g_list.pop_front() {
                 current = n;
             } else {
@@ -204,6 +204,12 @@ impl StarMap {
             }
         }
         pairings
+    }
+
+    fn compute_manhatten_distance(a: &Galaxy, b: &Galaxy) -> i128 {
+        let h = (a.row_index as i128 - b.row_index as i128).abs();
+        let v = (a.col_index as i128 - b.col_index as i128).abs();
+        h + v
     }
 }
 
@@ -320,5 +326,54 @@ mod test {
         let gl = map.get_galaxy_list();
         let out = StarMap::compute_parings(&gl);
         assert_eq!(out.len(), 36);
+    }
+
+    #[test]
+    fn test_manhatten() {
+        let input = r"....#........
+.........#...
+#............
+.............
+.............
+........#....
+.#...........
+............#
+.............
+.............
+.........#...
+#....#.......";
+        let map: StarMap = input.into();
+
+        let gl = map.get_galaxy_list();
+        let pairings = StarMap::compute_parings(&gl);
+        let (g1, g7) = pairings
+            .iter()
+            .find(|pair| {
+                let (g0, g1) = **pair;
+                g0.id == 1 && g1.id == 7
+            })
+            .unwrap();
+        let d_g1_g7 = StarMap::compute_manhatten_distance(g1, g7);
+        assert_eq!(d_g1_g7, 15);
+
+        let (g3, g6) = pairings
+            .iter()
+            .find(|pair| {
+                let (g0, g1) = **pair;
+                g0.id == 3 && g1.id == 6
+            })
+            .unwrap();
+        let d_g3_g6 = StarMap::compute_manhatten_distance(g3, g6);
+        assert_eq!(d_g3_g6, 17);
+
+        let (g8, g9) = pairings
+            .iter()
+            .find(|pair| {
+                let (g0, g1) = **pair;
+                g0.id == 8 && g1.id == 9
+            })
+            .unwrap();
+        let d_g8_g9 = StarMap::compute_manhatten_distance(g9, g8);
+        assert_eq!(d_g8_g9, 5);
     }
 }
