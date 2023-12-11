@@ -149,15 +149,12 @@ impl StarMap {
             .rows
             .iter()
             .flat_map(|row| {
-                let g_in_row: Vec<Cell> = row
-                    .iter()
+                row.iter()
                     .filter_map(|cell| match cell {
                         Cell::Blank => None,
                         Cell::Galaxy(id) => Some(Cell::Galaxy(*id)),
                     })
-                    .collect::<Vec<Cell>>();
-
-                g_in_row
+                    .collect::<Vec<Cell>>()
             })
             .collect::<Vec<Cell>>();
         galaxy_list
