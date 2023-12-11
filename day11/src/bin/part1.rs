@@ -5,7 +5,7 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
     Blank,
     Galaxy(u64),
@@ -142,13 +142,33 @@ impl StarMap {
 
         Self { rows: expanded_map }
     }
+
+    fn get_galaxy_list(&self) -> Vec<Cell> {
+        // find galaxies
+        let galaxy_list = self
+            .rows
+            .iter()
+            .flat_map(|row| {
+                let g_in_row: Vec<Cell> = row
+                    .iter()
+                    .filter_map(|cell| match cell {
+                        Cell::Blank => None,
+                        Cell::Galaxy(id) => Some(Cell::Galaxy(*id)),
+                    })
+                    .collect::<Vec<Cell>>();
+
+                g_in_row
+            })
+            .collect::<Vec<Cell>>();
+        galaxy_list
+    }
 }
 
 fn part1(input: &str) -> u32 {
     let map: StarMap = input.into();
     let blank_rows = map.collect_blank_rows();
     let blank_cols = map.collect_blank_cols();
-    let expanded_map = map.expand(&blank_rows, &blank_cols);
+    let _expanded_map = map.expand(&blank_rows, &blank_cols);
 
     todo!();
 }
@@ -237,5 +257,34 @@ mod test {
         let expected_map = expected_input.into();
 
         assert_eq!(expanded_map, expected_map);
+    }
+
+    #[test]
+    fn test_galaxy_list() {
+        let input = r"...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....";
+        let map: StarMap = input.into();
+        assert_eq!(
+            map.get_galaxy_list(),
+            vec![
+                Cell::Galaxy(1),
+                Cell::Galaxy(2),
+                Cell::Galaxy(3),
+                Cell::Galaxy(4),
+                Cell::Galaxy(5),
+                Cell::Galaxy(6),
+                Cell::Galaxy(7),
+                Cell::Galaxy(8),
+                Cell::Galaxy(9)
+            ]
+        )
     }
 }
