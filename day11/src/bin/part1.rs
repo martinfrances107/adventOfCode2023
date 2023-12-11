@@ -336,9 +336,9 @@ mod test {
 .......#..
 #...#.....";
         let map: StarMap = input.into();
-        assert_eq!(map.get_galaxy_list().len(), 9,);
-
         let gl = map.get_galaxy_list();
+        assert_eq!(gl.len(), 9,);
+
         let out = StarMap::compute_parings(&gl);
         assert_eq!(out.len(), 36);
     }
