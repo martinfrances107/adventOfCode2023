@@ -1,5 +1,5 @@
-use lazy_static::lazy_static;
-use regex::Regex;
+
+
 
 fn main() {
     let input = include_str!("./input1.txt");
@@ -31,7 +31,7 @@ fn transform(input: &str) -> String {
 
 fn mutate() {
     let line = r".?#";
-    assert_eq!(transform(&line), String::from("OMD"));
+    assert_eq!(transform(line), String::from("OMD"));
 }
 
 // Strip off leading '.' and strip off tailing '.'
@@ -68,7 +68,7 @@ fn possible_fit(line: &str, length: usize) -> Fit {
         .count();
 
     // Is the next char a valid terminating node.
-    match line.chars().skip(run_length).next() {
+    match line.chars().nth(run_length) {
         Some(c) => match c {
             '?' => Fit::Maybe,
             '.' => Fit::Yes,
@@ -81,7 +81,7 @@ fn possible_fit(line: &str, length: usize) -> Fit {
     }
 }
 
-fn part1(input: &str) -> u32 {
+fn part1(_input: &str) -> u32 {
     todo!();
 }
 
@@ -112,7 +112,7 @@ mod test {
 
         for tc in testcases {
             dbg!(&tc.0);
-            assert_eq!(possible_fit(&tc.0, 1), tc.1);
+            assert_eq!(possible_fit(tc.0, 1), tc.1);
         }
     }
 
