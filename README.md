@@ -57,15 +57,18 @@ Here i want to create an assembley of algorithms which are considered best in cl
            Itertools.counts() creates a histogram I clumsily implemented
            the histogram.
 
-- Day  8 -
+- Day  8 - L System
 
-- Day  9 - Part1 Refactor,
+- Day  9 -
+           Part1 Refactor,
            For these toy examples in it not a problem, but I am consuming way too much memory. [ it does not scale for large lines of numbers.]
            IterTools -- I could use a tuple_window() to have a sliding window
            of value(i) and value(i-1) useful when creating the diff.
            Then I can store only the latest diff.
 
-Day 10 - Needs major recator to get part1!
+Day 10 - Pipe puzzle
+
+        Needs major recator to get part1!
 
         |
         FJ
@@ -78,7 +81,8 @@ Day 10 - Needs major recator to get part1!
 
         then refactor the massive switch statement.
 
-Day 11 - Good use of filter_map
+Day 11 - Galaxy map
+        Good use of filter_map
          Refactor -- .expand() had a double loop I could remove.
 
 ## Observations
