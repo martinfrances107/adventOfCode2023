@@ -15,6 +15,17 @@ impl AshMirror {
         Self { col_map, row_map }
     }
 
+    fn from_puzzle(input: &[&str]) -> Self {
+        let row_map = input
+            .iter()
+            .map(|line| line.chars().collect::<Vec<char>>())
+            .collect::<Vec<_>>();
+
+        let col_map = col_map(row_map.clone());
+
+        Self { col_map, row_map }
+    }
+
     fn score(&self) -> u128 {
         let mut score: u128 = 0;
         let candidate_row_points = row_matches(&self.row_map);
@@ -62,6 +73,29 @@ impl AshMirror {
 fn main() {
     let input = include_str!("./input1.txt");
     // println!("{:?}", part1(input));
+
+    let mut total = 0u128;
+    let lines: Vec<_> = input.lines().map(|line| line).collect();
+
+    let puzzles = lines
+        .split(|line| {
+            // a
+            line.is_empty()
+        })
+        .collect::<Vec<_>>();
+
+    for p in puzzles {
+        println!("new Puzzle");
+        for l in p {
+            println!("{l}");
+        }
+        let am = AshMirror::from_puzzle(p);
+        let p_score = am.score();
+        total += p_score;
+        println!("score: {p_score}");
+        println!();
+    }
+    println!("Total: {total}");
 }
 
 fn col_map(row_map: Vec<Vec<char>>) -> Vec<Vec<char>> {
@@ -122,6 +156,12 @@ fn is_a_horizontal_mirror_point(reflection_edge: (u128, u128), hor_map: Vec<Vec<
     let left_index = (reflection_edge.0 - 1) as usize;
     let right_index = (reflection_edge.1 - 1) as usize;
 
+    dbg!(left_index);
+    dbg!(right_index);
+
+    if left_index == 0 {
+        return false;
+    }
     // reflection_edge has been checked, hence the -1 and +1 below.
     let left_walker = 0..=left_index - 1;
     let right_walker = right_index + 1..hor_map.len();
@@ -143,6 +183,12 @@ fn is_a_veritcal_mirror_point(reflection_edge: (u128, u128), col_map: Vec<Vec<ch
     let left_index = (reflection_edge.0 - 1) as usize;
     let right_index = (reflection_edge.1 - 1) as usize;
 
+    dbg!(left_index);
+    dbg!(right_index);
+
+    if left_index == 0 {
+        return false;
+    }
     // reflection_edge has been checked, hence the -1 and +1 below.
     let left_walker = 0..=left_index - 1;
     let right_walker = right_index + 1..col_map.len();
@@ -151,7 +197,10 @@ fn is_a_veritcal_mirror_point(reflection_edge: (u128, u128), col_map: Vec<Vec<ch
         .into_iter()
         .rev()
         .zip(right_walker)
-        .any(|(l, r)| col_map[l] != col_map[r]);
+        .any(|(l, r)| match (col_map.get(l), col_map.get(r)) {
+            (Some(l_col), Some(r_col)) => l_col != r_col,
+            _ => true,
+        });
 
     !breaks_pattern
 }
