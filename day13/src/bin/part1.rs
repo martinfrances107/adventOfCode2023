@@ -10,7 +10,7 @@ impl AshMirror {
             .map(|line| line.chars().collect::<Vec<char>>())
             .collect::<Vec<_>>();
 
-        let col_map = col_map(row_map.clone());
+        let col_map = col_map(&row_map.clone());
 
         Self { col_map, row_map }
     }
@@ -21,7 +21,7 @@ impl AshMirror {
             .map(|line| line.chars().collect::<Vec<char>>())
             .collect::<Vec<_>>();
 
-        let col_map = col_map(row_map.clone());
+        let col_map = col_map(&row_map.clone());
 
         Self { col_map, row_map }
     }
@@ -32,7 +32,7 @@ impl AshMirror {
         let h_mps: Vec<_> = candidate_row_points
             .iter()
             .filter_map(|mp| {
-                if is_a_horizontal_mirror_point(*mp, self.row_map.clone()) {
+                if is_a_horizontal_mirror_point(*mp, &self.row_map.clone()) {
                     Some(mp)
                 } else {
                     None
@@ -52,7 +52,7 @@ impl AshMirror {
         let v_mps: Vec<_> = candidate_col_points
             .iter()
             .filter_map(|mp| {
-                if is_a_veritcal_mirror_point(*mp, self.col_map.clone()) {
+                if is_a_veritcal_mirror_point(*mp, &self.col_map.clone()) {
                     Some(mp)
                 } else {
                     None
@@ -75,7 +75,7 @@ fn main() {
     // println!("{:?}", part1(input));
 
     let mut total = 0u128;
-    let lines: Vec<_> = input.lines().map(|line| line).collect();
+    let lines: Vec<_> = input.lines().collect();
 
     let puzzles = lines
         .split(|line| {
@@ -99,7 +99,7 @@ fn main() {
     println!("Total: {total}");
 }
 
-fn col_map(row_map: Vec<Vec<char>>) -> Vec<Vec<char>> {
+fn col_map(row_map: &[Vec<char>]) -> Vec<Vec<char>> {
     let row_len = row_map[0].len();
     // let mut col_map: Vec<Vec<char>> = Vec::with_capacity(row_len);
     // Every column needs to be defined before population.
@@ -116,7 +116,7 @@ fn part1() -> u32 {
     todo!();
 }
 
-fn row_matches(row_map: &Vec<Vec<char>>) -> Vec<(u128, u128)> {
+fn row_matches(row_map: &[Vec<char>]) -> Vec<(u128, u128)> {
     row_map
         .windows(2)
         .enumerate()
@@ -132,7 +132,7 @@ fn row_matches(row_map: &Vec<Vec<char>>) -> Vec<(u128, u128)> {
         .collect::<Vec<_>>()
 }
 
-fn col_matches(col_map: &Vec<Vec<char>>) -> Vec<(u128, u128)> {
+fn col_matches(col_map: &[Vec<char>]) -> Vec<(u128, u128)> {
     col_map
         .windows(2)
         .enumerate()
@@ -149,7 +149,7 @@ fn col_matches(col_map: &Vec<Vec<char>>) -> Vec<(u128, u128)> {
         .collect::<Vec<_>>()
 }
 
-fn is_a_horizontal_mirror_point(reflection_edge: (u128, u128), hor_map: Vec<Vec<char>>) -> bool {
+fn is_a_horizontal_mirror_point(reflection_edge: (u128, u128), hor_map: &[Vec<char>]) -> bool {
     // for each advancing left-hand-edge
     // compare with the corresponding right-hand-edge.
 
@@ -176,7 +176,7 @@ fn is_a_horizontal_mirror_point(reflection_edge: (u128, u128), hor_map: Vec<Vec<
     !breaks_pattern
 }
 
-fn is_a_veritcal_mirror_point(reflection_edge: (u128, u128), col_map: Vec<Vec<char>>) -> bool {
+fn is_a_veritcal_mirror_point(reflection_edge: (u128, u128), col_map: &[Vec<char>]) -> bool {
     // for each advancing left-hand-edge
     // compare with the corresponding right-hand-edge.
 
@@ -227,7 +227,7 @@ mod test {
 
         let candidate_mpoints = row_matches(&row_map);
         assert_eq!(candidate_mpoints, vec![(4, 5)]);
-        assert!(is_a_horizontal_mirror_point(candidate_mpoints[0], row_map),);
+        assert!(is_a_horizontal_mirror_point(candidate_mpoints[0], &row_map),);
     }
 
     #[test]
@@ -243,10 +243,10 @@ mod test {
             .lines()
             .map(|line| line.chars().collect::<Vec<char>>())
             .collect::<Vec<Vec<char>>>();
-        let col_map = col_map(row_map.clone());
+        let col_map = col_map(&row_map.clone());
         let candidate_mpoints = col_matches(&col_map);
         assert_eq!(candidate_mpoints, vec![(5, 6)]);
-        assert!(is_a_veritcal_mirror_point(candidate_mpoints[0], col_map),);
+        assert!(is_a_veritcal_mirror_point(candidate_mpoints[0], &col_map),);
     }
 
     #[test]
@@ -263,10 +263,10 @@ mod test {
             .lines()
             .map(|line| line.chars().collect::<Vec<char>>())
             .collect::<Vec<Vec<char>>>();
-        let col_map = col_map(row_map.clone());
+        let col_map = col_map(&row_map.clone());
         let candidate_mpoints = col_matches(&col_map);
         assert_eq!(candidate_mpoints, vec![(5, 6)]);
-        assert!(!is_a_veritcal_mirror_point(candidate_mpoints[0], col_map));
+        assert!(!is_a_veritcal_mirror_point(candidate_mpoints[0], &col_map));
     }
 
     #[test]
@@ -286,7 +286,10 @@ mod test {
 
         let candidate_mpoints = row_matches(&row_map);
         assert_eq!(candidate_mpoints, vec![(4, 5)]);
-        assert!(!is_a_horizontal_mirror_point(candidate_mpoints[0], row_map));
+        assert!(!is_a_horizontal_mirror_point(
+            candidate_mpoints[0],
+            &row_map
+        ));
     }
 
     #[test]
