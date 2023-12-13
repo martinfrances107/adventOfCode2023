@@ -95,6 +95,7 @@ fn main() {
         println!("score: {p_score}");
         println!();
     }
+    println!("34103 is too low");
     println!("Total: {total}");
 }
 
