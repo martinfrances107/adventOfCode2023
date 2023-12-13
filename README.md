@@ -94,6 +94,10 @@ Day 13 - Ash Mirrors
 
         Not sure, as my current answer is too low and this would
         only drop the score further.
+
+        I think the next step is to display the horizontal/vertical brackets
+        on the puzzle as they are processed.
+
 ## Observations
 
 Using "Itertools" as a example of good library code
