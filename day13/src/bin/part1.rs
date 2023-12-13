@@ -1,4 +1,63 @@
-use core::iter::successors;
+struct AshMirror {
+    col_map: Vec<Vec<char>>,
+    row_map: Vec<Vec<char>>,
+}
+
+impl AshMirror {
+    fn new(input: &str) -> Self {
+        let row_map = input
+            .lines()
+            .map(|line| line.chars().collect::<Vec<char>>())
+            .collect::<Vec<_>>();
+
+        let col_map = col_map(row_map.clone());
+
+        Self { col_map, row_map }
+    }
+
+    fn score(&self) -> u128 {
+        let mut score: u128 = 0;
+        let candidate_row_points = row_matches(&self.row_map);
+        let h_mps: Vec<_> = candidate_row_points
+            .iter()
+            .filter_map(|mp| {
+                if is_a_horizontal_mirror_point(*mp, self.row_map.clone()) {
+                    Some(mp)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        match h_mps.len() {
+            0 => {}
+            1 => score += h_mps[0].0 * 100,
+            _ => {
+                panic!("unexpected number of h. mirror points");
+            }
+        }
+
+        let candidate_col_points = col_matches(&self.col_map);
+        let v_mps: Vec<_> = candidate_col_points
+            .iter()
+            .filter_map(|mp| {
+                if is_a_veritcal_mirror_point(*mp, self.col_map.clone()) {
+                    Some(mp)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        match v_mps.len() {
+            0 => {}
+            1 => score += v_mps[0].0,
+            _ => {
+                panic!("unexpected number of v. mirror points");
+            }
+        }
+        score
+    }
+}
 
 fn main() {
     let input = include_str!("./input1.txt");
@@ -21,27 +80,6 @@ fn col_map(row_map: Vec<Vec<char>>) -> Vec<Vec<char>> {
 fn part1() -> u32 {
     todo!();
 }
-// fn score(input: &str) -> u32 {
-//     let row_map = input
-//         .lines()
-//         .map(|line| line.chars().collect::<Vec<char>>())
-//         .collect::<Vec<Vec<char>>>();
-//     let col_map = col_map(row_map.clone());
-
-//             let col_map = col_map(row_map.clone());
-//             let candidate_mpoints = col_matches(&col_map);
-//          candidate_mpoints.map(||{
-
-//          }).collect();
-
-//             assert!(is_a_veritcal_mirror_point(candidate_mpoints[0], col_map),);
-//         }
-//     // Reduce list to true mirror points.
-
-//     // get list of candiate row mirror points.
-
-//     // Reduce list to true mirror points.
-// }
 
 fn row_matches(row_map: &Vec<Vec<char>>) -> Vec<(u128, u128)> {
     row_map
@@ -199,5 +237,31 @@ mod test {
         let candidate_mpoints = row_matches(&row_map);
         assert_eq!(candidate_mpoints, vec![(4, 5)]);
         assert!(!is_a_horizontal_mirror_point(candidate_mpoints[0], row_map));
+    }
+
+    #[test]
+    fn score_h() {
+        let input = r"#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#";
+        let mirror = AshMirror::new(input);
+        assert_eq!(mirror.score(), 400);
+    }
+
+    #[test]
+    fn score_vertical() {
+        let input = r"#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.";
+        let mirror = AshMirror::new(input);
+        assert_eq!(mirror.score(), 5);
     }
 }
