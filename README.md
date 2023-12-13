@@ -85,6 +85,15 @@ Day 11 - Galaxy map
         Good use of filter_map
          Refactor -- .expand() had a double loop I could remove.
 
+Day 13 - Ash Mirrors
+
+        part 1 is failing ...
+        There are some more tests that I can implement:-
+        I need to alter rows and columns at the edges which are not checked
+        for mirror becasue the other "walker" has already met an edge.
+
+        Not sure, as my current answer is too low and this would
+        only drop the score further.
 ## Observations
 
 Using "Itertools" as a example of good library code
