@@ -12,16 +12,19 @@ Here i want to create an assembley of algorithms which are considered best in cl
 
 ## Notes
 
-- Day  1 - using .sum() and str::to_digits(10)
+- Day  1 - Trebuchet - corrupt calibration data.
+          using .sum() and str::to_digits(10)
            part 2
            I delayed until a good solution could be found.
            A clean implementation uses .find and rfind() -- reverse find.
            Also of intrest I collected into a BTree so I could extract the
            last and the first.
 
-- Day  2 - using str::strip_suffix()
+- Day  2 - RGB cubes game
+            using str::strip_suffix()
 
-- Day  3 - Current soltion has lots of duplicate code
+- Day  3 - Gear Ratios
+            Current soltion has lots of duplicate code
             - The goodness of this solution is that it minimised the memory footprint
               only the last, current and next lines are held.
             - The memory foot print could be further minimised by not cloning slice and
@@ -29,14 +32,16 @@ Here i want to create an assembley of algorithms which are considered best in cl
             - For performance only the left and right had edge of the sarch window need to
               be checked. Current I am looping over the whole window.
 
-- Day  4 - The current solution is slow ( 8s (release mode) for part 2 )
+- Day  4 - Scratch Cards
+          The current solution is slow ( 8s (release mode) for part 2 )
            Needs Refactor
                 Collect winnings and playable numbers in two HashSets
                 precompute and store the result... at present I compute in the worst case senario.
                 Minimal "Card" should be a list of card offset to "copy"
                 Looking using "fold"
 
-- Day  5 - Needs Refator
+- Day  5 - Almanac as a multi-map planting shedule
+              Needs Refator
               Could you take_while to avoid nested looping.
               part 2 is tricky
               Good use of .chunks(2) to split the seeds int pairs of numbers.
@@ -47,19 +52,22 @@ Here i want to create an assembley of algorithms which are considered best in cl
                -- must remove all .collect() calls and remove memory usage.
                -- Use rayon .. and compute all seed blocks in parallel?
 
-- Day  6 - Part 1: An good example of a small memory footprint.
+- Day  6 - Toy Racing game ( button hold duration )
+            Part 1: An good example of a small memory footprint.
             Two iterators are ".zip()ed' and fed into a .product() call with out any
             intermediate value ever being ".collected()".
             Part 2: Just demonstates that u32 overflow.
 
-- Day  7 - Part1 Refactor PartialOrd is verbose
+- Day  7 - Camel cards
+          Part1 Refactor PartialOrd is verbose
            I think I can find a 5 lines replacement for it.
            Itertools.counts() creates a histogram I clumsily implemented
            the histogram.
 
 - Day  8 - L System
 
-- Day  9 -
+- Day  9 - Data Extrapolation extercise.
+
            Part1 Refactor,
            For these toy examples in it not a problem, but I am consuming way too much memory. [ it does not scale for large lines of numbers.]
            IterTools -- I could use a tuple_window() to have a sliding window
@@ -116,3 +124,5 @@ functions that use std function like HashMap should signal to the compiler that 
         counts
     }
 ```
+
+How easy it is to create permulations and combinations from a list.
