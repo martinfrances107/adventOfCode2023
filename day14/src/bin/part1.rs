@@ -36,8 +36,6 @@ impl ShuffleBoard {
     }
 
     fn slide_col(col: &mut [char]) {
-        // split into movement sections
-
         loop {
             let slide_list = col
                 .windows(2)
@@ -45,14 +43,14 @@ impl ShuffleBoard {
                 .filter_map(|(index, pair)| {
                     debug_assert!(pair.len() == 2);
                     let l = *pair
-                        .get(0)
+                        .first()
                         //"window has two elements cannot locate first"
                         .unwrap();
                     let r = *pair
                         .get(1)
                         // "window has two elements cannot locate second"
                         .unwrap();
-                    // dbg!(pair);
+
                     if (l, r) == ('.', 'O') {
                         Some(index)
                     } else {
@@ -60,7 +58,7 @@ impl ShuffleBoard {
                     }
                 })
                 .collect::<Vec<_>>();
-            dbg!(&slide_list);
+
             if slide_list.is_empty() {
                 break;
             }
