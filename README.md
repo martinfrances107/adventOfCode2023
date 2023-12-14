@@ -16,7 +16,7 @@ Here i want to create an assembley of algorithms which are considered best in cl
           using .sum() and str::to_digits(10)
            part 2
            I delayed until a good solution could be found.
-           A clean implementation uses .find and rfind() -- reverse find.
+           A clean implementation uses .find and .rfind() -- reverse find.
            Also of intrest I collected into a BTree so I could extract the
            last and the first.
 
@@ -81,7 +81,7 @@ Day 10 - Pipe puzzle
         |
         FJ
 
-        have identified this as the pathalogcal case
+        have identified this as the pathalogical case
         from J to F should be downwards, but up is taken
 
         Need to add a method to at the start inspect the s tile
@@ -106,6 +106,13 @@ Day 13 - Ash Mirrors
         I think the next step is to display the horizontal/vertical brackets
         on the puzzle as they are processed.
 
+Day 14 - Rolling rocks
+      part 1 passes.
+      part 2 operated over 10^9 spin cycles.
+      I need to make the solution generic for the N, W, S, E
+      antilock-wise rolling.
+      Can I merge the four steps into one?
+
 ## Observations
 
 Using "Itertools" as a example of good library code
@@ -125,4 +132,4 @@ functions that use std function like HashMap should signal to the compiler that 
     }
 ```
 
-How easy it is to create permulations and combinations from a list.
+How easy it is, using std functions to create permulations and combinations from a list.
