@@ -1,13 +1,24 @@
+use core::fmt::Debug;
+use core::fmt::Formatter;
 fn main() {
     let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 struct ShuffleBoard {
     col_map: Vec<Vec<char>>,
     row_map: Vec<Vec<char>>,
 }
+
+// impl Debug for ShuffleBoard {
+//     fn fmt(&self, _: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+//         // Just the column map
+//         for col in self.col_map{
+//           for
+//         }
+//     }
+// }
 
 impl ShuffleBoard {
     fn new(input: &str) -> Self {
@@ -67,14 +78,21 @@ impl ShuffleBoard {
                 col.swap(left_swap, left_swap + 1);
             }
         }
-        dbg!("final");
-        dbg!(&col);
     }
 
     fn slide(&mut self) {
         // Iterator over every column sliding.
         for col in self.col_map.iter_mut() {
             Self::slide_col(col)
+        }
+
+        // score and display functions on row map.
+        // so keep things in sync.
+        for (row_index, row) in self.row_map.iter_mut().enumerate() {
+            for (col_index, c) in row.iter_mut().enumerate() {
+                // actual
+                *c = self.col_map[col_index][row_index];
+            }
         }
     }
 }
