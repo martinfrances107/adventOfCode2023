@@ -6,10 +6,7 @@ fn main() {
 }
 
 fn part1(input: &str) -> u64 {
-    let totals = input
-        .lines()
-        .map(|line| single_line(line))
-        .collect::<Vec<_>>();
+    let totals = input.lines().map(single_line).collect::<Vec<_>>();
     totals.iter().sum()
 }
 
