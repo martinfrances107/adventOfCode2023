@@ -1,12 +1,17 @@
+use core::f32::MIN_POSITIVE;
 use core::num::Wrapping;
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Lens<'a> {
     label: &'a str,
-    factor: u8,
+    focal_length: u8,
+}
+impl<'a> Lens<'a> {
+    fn label_matches(&self, label: &str) -> bool {
+        self.label == label
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -37,37 +42,60 @@ impl<'a> Default for Row<'a> {
 }
 
 impl<'a> Row<'a> {
-    fn process(&mut self, instr: &'a Instruction) {
+    fn process(&mut self, input: &'a str) {
+        let instr: Instruction = input.into();
         let box_id = hash_day15(instr.label);
         // Drop if box not found
         dbg!(&instr);
         if let Some(b) = self.boxes.get_mut(&box_id) {
             match instr.operation {
-                Operation::Equals(factor) => {
-                    let new_lens = Lens {
-                        label: instr.label,
-                        factor,
-                    };
-                    dbg!(&new_lens);
-
-                    if b.lens.contains(&new_lens) {
-                        let index = b.lens.partition_point(|lens| lens.label == new_lens.label);
-                        // push back .. dont distrub index
-                        b.lens.push_back(new_lens);
-                        b.lens.swap_remove_back(index);
-                    } else {
-                        b.lens.push_front(new_lens);
+                Operation::Equals(focal_length) => {
+                    let mut found = false;
+                    for lens in b.lens.iter_mut() {
+                        if lens.label_matches(instr.label) {
+                            // As per insttuction update the focal length.
+                            lens.focal_length = focal_length;
+                            found = true;
+                        }
+                    }
+                    // If new lens push to the back.
+                    if !found {
+                        b.lens.push_back(Lens {
+                            label: instr.label,
+                            focal_length,
+                        })
                     }
                 }
                 Operation::Subtract => {
-                    todo!();
+                    //get the position of any matching lens
+                    b.lens.retain(|lens| !lens.label_matches(instr.label))
                 }
             }
         }
     }
+
+    fn focal_power(&self) -> u64 {
+        let mut total_power = 0u64;
+        for box_index in 0..=255 {
+            let box_number = (box_index as u64) + 1;
+            let b = self.boxes.get(&box_index).unwrap();
+            let focal_powers_for_box = b
+                .lens
+                .iter()
+                .enumerate()
+                .map(|(len_index, lens)| {
+                    let lens_number = (len_index as u64) + 1;
+                    let fp = (box_number as u64) * lens_number * (lens.focal_length as u64);
+                    fp
+                })
+                .collect::<Vec<u64>>();
+            total_power += focal_powers_for_box.iter().sum::<u64>();
+        }
+        total_power
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Operation {
     Subtract,
     Equals(u8),
@@ -91,7 +119,7 @@ impl From<&str> for Operation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Instruction<'a> {
     label: &'a str,
     operation: Operation,
@@ -162,43 +190,61 @@ rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
     }
 
     #[test]
-    fn process() {
-        // let process_strings: Vec<&str> = vec![
-        //     // "rn=1", "cm-", "qp=3", "cm=2", "qp-", "pc=4", "ot=9", "ab=5", "pc-", "pc=6", "ot=7",
-        //     "rn=1",
-        // ];
-
-        // let process_list = process_strings
-        //     .iter()
-        //     .map(|line| {
-        //         let a = *line;
-        //         a.into()
-        //     })
-        //     .collect::<Vec<_>>();
-
-        // let mut iter = process_list.iter();
+    fn process_steps() {
         let mut boxes = Row::default();
 
         // Step one
         // After "rn=1":
-        let binding = Instruction::from("rn=1");
-        boxes.process(&binding);
+        boxes.process(&"rn=1");
 
         let mut expected_boxes = Row::default();
         let expected_box0 = expected_boxes.boxes.get_mut(&0).unwrap();
         expected_box0.lens.push_front(Lens {
             label: "rn",
-            factor: 1,
+            focal_length: 1,
         });
 
         assert_eq!(boxes, expected_boxes);
 
         // Step two
         // After "cm-":
-        let binding = Instruction::from("cm-");
-        boxes.process(&binding);
+
+        boxes.process(&"cm-");
 
         // No change
         assert_eq!(boxes, expected_boxes);
+
+        // Step three
+        // After "qp=3":
+        boxes.process("qp=3");
+
+        let expected_box1 = expected_boxes.boxes.get_mut(&1).unwrap();
+
+        expected_box1.lens.push_front(Lens {
+            label: "qp",
+            focal_length: 3, // TODO 3 is not checked here.
+        });
+        assert_eq!(boxes, expected_boxes);
+        // assert!(false);
+    }
+
+    #[test]
+    fn process() {
+        let process_strings: Vec<&'static str> = vec![
+            "rn=1", "cm-", "qp=3", "cm=2", "qp-", "pc=4", "ot=9", "ab=5", "pc-", "pc=6", "ot=7",
+        ];
+
+        let mut row = Row::<'static>::default();
+        for i in 0..process_strings.len() {
+            row.process(&process_strings[i]);
+        }
+
+        // These boxes match the test results.
+        // dbg!(row.boxes.get(&0));
+        // dbg!(row.boxes.get(&1));
+        // dbg!(row.boxes.get(&2));
+        // dbg!(row.boxes.get(&3));
+
+        assert_eq!(row.focal_power(), 145);
     }
 }
