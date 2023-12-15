@@ -36,6 +36,7 @@ impl<'a> Default for Row<'a> {
 impl<'a> Row<'a> {
     fn process(&mut self, input: &'a str) {
         let instr: Instruction = input.into();
+
         let box_id = hash_day15(instr.label);
 
         if let Some(b) = self.boxes.get_mut(&box_id) {
@@ -44,7 +45,7 @@ impl<'a> Row<'a> {
                     let mut found = false;
                     for lens in b.lens.iter_mut() {
                         if lens.label_matches(instr.label) {
-                            // As per insttuction update the focal length.
+                            // As per instuction update the focal length.
                             lens.focal_length = focal_length;
                             found = true;
                         }
@@ -117,9 +118,24 @@ struct Instruction<'a> {
 
 impl<'a> From<&'a str> for Instruction<'a> {
     fn from(input: &'a str) -> Self {
-        Self {
-            label: &input[0..=1],
-            operation: input[2..].into(),
+        match input.split_once('=') {
+            Some((label, fl_str)) => {
+                let fl = fl_str.chars().nth(0).unwrap().to_digit(10).unwrap();
+                let instruction = Instruction {
+                    label,
+                    operation: Operation::Equals(fl as u8),
+                };
+                instruction
+            }
+            None => match input.split_once('-') {
+                Some((label, _)) => Instruction {
+                    operation: Operation::Subtract,
+                    label,
+                },
+                None => {
+                    panic!("could not decode");
+                }
+            },
         }
     }
 }
@@ -156,6 +172,17 @@ mod test {
     fn hash() {
         let input = r"HASH";
         assert_eq!(hash_day15(input), 52);
+    }
+
+    #[test]
+    fn long_label() {
+        let eq_str = "helloWord=66";
+        let instruction: Instruction = eq_str.into();
+        dbg!(instruction);
+        let sub_str = "bababa-";
+        let instruction: Instruction = sub_str.into();
+        dbg!(instruction);
+        assert!(false);
     }
 
     #[test]
