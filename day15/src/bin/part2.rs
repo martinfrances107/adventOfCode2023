@@ -1,4 +1,3 @@
-use core::f32::MIN_POSITIVE;
 use core::num::Wrapping;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -14,18 +13,11 @@ impl<'a> Lens<'a> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 struct LensBox<'a> {
     lens: VecDeque<Lens<'a>>,
 }
 
-impl<'a> Default for LensBox<'a> {
-    fn default() -> Self {
-        Self {
-            lens: VecDeque::new(),
-        }
-    }
-}
 #[derive(Debug, PartialEq)]
 struct Row<'a> {
     boxes: HashMap<u8, LensBox<'a>>,
@@ -45,8 +37,7 @@ impl<'a> Row<'a> {
     fn process(&mut self, input: &'a str) {
         let instr: Instruction = input.into();
         let box_id = hash_day15(instr.label);
-        // Drop if box not found
-        dbg!(&instr);
+
         if let Some(b) = self.boxes.get_mut(&box_id) {
             match instr.operation {
                 Operation::Equals(focal_length) => {
@@ -85,8 +76,7 @@ impl<'a> Row<'a> {
                 .enumerate()
                 .map(|(len_index, lens)| {
                     let lens_number = (len_index as u64) + 1;
-                    let fp = (box_number as u64) * lens_number * (lens.focal_length as u64);
-                    fp
+                    box_number * lens_number * (lens.focal_length as u64)
                 })
                 .collect::<Vec<u64>>();
             total_power += focal_powers_for_box.iter().sum::<u64>();
@@ -127,14 +117,10 @@ struct Instruction<'a> {
 
 impl<'a> From<&'a str> for Instruction<'a> {
     fn from(input: &'a str) -> Self {
-        dbg!(input);
-
-        let label = &input[0..=1];
-        let mut chars = input.chars().skip(2).take(4);
-
-        let operation = input[2..].into();
-
-        Self { label, operation }
+        Self {
+            label: &input[0..=1],
+            operation: input[2..].into(),
+        }
     }
 }
 
@@ -225,7 +211,6 @@ rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
             focal_length: 3, // TODO 3 is not checked here.
         });
         assert_eq!(boxes, expected_boxes);
-        // assert!(false);
     }
 
     #[test]
