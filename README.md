@@ -113,6 +113,9 @@ Day 14 - Rolling rocks
       antilock-wise rolling.
       Can I merge the four steps into one?
 
+Day 15 - Hash algorithrm
+
+      Good example of using Wrapping<u8> to create a hash.
 ## Observations
 
 Using "Itertools" as a example of good library code
@@ -133,3 +136,5 @@ functions that use std function like HashMap should signal to the compiler that 
 ```
 
 How easy it is, using std functions to create permulations and combinations from a list.
+
+".boundaries" is a useful thing.
