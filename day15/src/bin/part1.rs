@@ -5,28 +5,19 @@ fn main() {
     println!("{:?}", part1(input));
 }
 
-fn part1(input: &str) -> u32 {
-    input
+fn part1(input: &str) -> u64 {
+    let totals = input
         .lines()
-        .map(|line| {
-            let number_str = line.chars().filter(|c| c.is_numeric()).collect::<Vec<_>>();
-            let mut n = 0;
-            if let Some(first) = number_str.first() {
-                if let Some(tens) = first.to_digit(10) {
-                    n += tens * 10;
-                }
-            }
-            if let Some(first) = number_str.last() {
-                if let Some(units) = first.to_digit(10) {
-                    n += units;
-                }
-            }
-            n
-        })
-        .sum()
+        .map(|line| single_line(line))
+        .collect::<Vec<_>>();
+    totals.iter().sum()
 }
 
-fn HashDay15(input: &str) -> u8 {
+fn single_line(input: &str) -> u64 {
+    input.split(',').map(|x| hash_day15(x) as u64).sum()
+}
+
+fn hash_day15(input: &str) -> u8 {
     let sum = input.bytes().fold(0, |cv, c| {
         let a = Wrapping(cv) + Wrapping(c);
         let b = a * Wrapping(17);
@@ -43,14 +34,23 @@ mod test {
     #[test]
     fn hash() {
         let input = r"HASH";
-        assert_eq!(HashDay15(input), 52);
+        assert_eq!(hash_day15(input), 52);
     }
 
     #[test]
     fn simple() {
         let input = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
-        let total: u64 = input.split(',').map(|x| HashDay15(x) as u64).sum();
+        let total: u64 = input.split(',').map(|x| hash_day15(x) as u64).sum();
 
         assert_eq!(total, 1320);
+    }
+
+    #[test]
+    fn mulit_line() {
+        let input = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7
+rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
+        let total: u64 = part1(input);
+
+        assert_eq!(total, 2 * 1320);
     }
 }
