@@ -114,6 +114,7 @@ Day 14 - Rolling rocks
       Can I merge the four steps into one?
 
 Day 15 - Hash algorithrm
+      part 2 in a good examples of CRUD operations when using a VecDeque
 
       Good example of using Wrapping<u8> to create a hash.
 ## Observations
