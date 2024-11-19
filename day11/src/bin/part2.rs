@@ -171,7 +171,7 @@ impl StarMap {
     }
 
     fn expand(self, bump: usize, blank_rows: &[usize], blank_cols: &[usize]) -> Self {
-        dbg!("expanfing");
+        dbg!("expanding");
         let n_rows = self.rows.len();
         let mut rows: Vec<Vec<Cell>> = Vec::with_capacity(n_rows);
         for (row_index, row) in self.rows.iter().enumerate() {
@@ -358,6 +358,8 @@ mod test {
 ...
 ..#";
 
+        assert_eq!(part2(input, 10), 22);
+        assert_eq!(part2(input, 100), 201);
         assert_eq!(part2(input, 1_000_000), 2_000_002);
     }
 
