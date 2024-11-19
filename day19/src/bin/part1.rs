@@ -33,7 +33,7 @@ enum Category {
 struct Rule<'a> {
     category: Category,
     operator: Operator,
-    value: u16,
+    value: u32,
     next: &'a str,
 }
 
@@ -64,12 +64,16 @@ impl<'a> Rule<'a> {
 
 #[derive(Debug)]
 struct Part {
-    x: u16,
-    m: u16,
-    a: u16,
-    s: u16,
+    x: u32,
+    m: u32,
+    a: u32,
+    s: u32,
 }
-
+impl Part {
+    fn value(&self) -> u32 {
+        self.x + self.m + self.a + self.s
+    }
+}
 fn parse_part(input: &str) -> IResult<&str, Part> {
     map(
         tuple((
@@ -123,7 +127,7 @@ fn parse_operator(input: &str) -> IResult<&str, Operator> {
     })(input)
 }
 
-fn parse_value(input: &str) -> IResult<&str, u16> {
+fn parse_value(input: &str) -> IResult<&str, u32> {
     map_res(digit1, str::parse)(input)
 }
 
@@ -160,7 +164,8 @@ fn parse_line(input: &str) -> IResult<&str, (&str, Vec<Rule>, &str)> {
 }
 
 fn part1(input: &str) -> u32 {
-    let named_rules: Vec<(&str, Vec<Rule>, &str)> = input
+    let rules = include_str!("./rules1.txt");
+    let named_rules: Vec<(&str, Vec<Rule>, &str)> = rules
         .lines()
         .map(|line| {
             println!("line  - {line:#?}");
@@ -180,20 +185,18 @@ fn part1(input: &str) -> u32 {
         rule_set.insert(name, (rules, failed_rule));
     }
 
-    let part_pass = [
-        ("{x=787,m=2655,a=1222,s=2876}", true),
-        ("{x=1679,m=44,a=2067,s=496}", false),
-        ("{x=2036,m=264,a=79,s=2244}", true),
-        ("{x=2461,m=1339,a=466,s=291}", false),
-        ("{x=2127,m=1623,a=2188,s=1013}", true),
-    ];
+    let parts_str = include_str!("./parts1.txt");
 
-    for (part_str, expected) in part_pass {
+    let mut total = 0;
+    for part_str in parts_str.lines() {
         let (_remain, part) = parse_part(part_str).expect("must have valid part.");
         println!("Part {:#?}", part);
-        assert_eq!(accept_part(&rule_set, &part), expected);
-    }
 
+        if accept_part(&rule_set, &part) {
+            total += part.value();
+        }
+    }
+    println!("total {total:?}");
     todo!();
 }
 
@@ -280,5 +283,62 @@ mod test {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn example() {
+        let rules = "px{a<2006:qkq,m>2090:A,rfg}
+pv{a>1716:R,A}
+lnx{m>1548:A,A}
+rfg{s<537:gd,x>2440:R,A}
+qs{s>3448:A,lnx}
+qkq{x<1416:A,crn}
+crn{x>2662:A,R}
+in{s<1351:px,qqz}
+qqz{s>2770:qs,m<1801:hdj,R}
+gd{a>3333:R,R}
+hdj{m>838:A,pv}";
+        let named_rules: Vec<(&str, Vec<Rule>, &str)> = rules
+            .lines()
+            .map(|line| {
+                println!("line  - {line:#?}");
+                parse_line(line)
+            })
+            .map(|result| {
+                if let Ok((_remain, (name, rules, failed))) = result {
+                    (name, rules, failed)
+                } else {
+                    panic!("part1 Failed to parse line");
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let mut rule_set = HashMap::new();
+        for (name, rules, failed_rule) in named_rules {
+            rule_set.insert(name, (rules, failed_rule));
+        }
+
+        let part_pass = [
+            ("{x=787,m=2655,a=1222,s=2876}", true),
+            ("{x=1679,m=44,a=2067,s=496}", false),
+            ("{x=2036,m=264,a=79,s=2244}", true),
+            ("{x=2461,m=1339,a=466,s=291}", false),
+            ("{x=2127,m=1623,a=2188,s=1013}", true),
+        ];
+
+        let mut total = 0;
+        for (part_str, expected) in part_pass {
+            let (_remain, part) = parse_part(part_str).expect("must have valid part.");
+            println!("Part {:#?}", part);
+
+            let is_accepted = accept_part(&rule_set, &part);
+            assert_eq!(accept_part(&rule_set, &part), expected);
+
+            if is_accepted {
+                total += part.value();
+            }
+        }
+        println!("total {total:?}");
+        assert_eq!(total, 19114);
     }
 }
