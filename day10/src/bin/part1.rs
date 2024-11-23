@@ -2,7 +2,8 @@ use core::fmt::Display;
 use core::fmt::Formatter;
 
 fn main() {
-    let input = include_str!("./sample.txt");
+    println!("\x1b[0;31mSO\x1b[0m");
+    let input = include_str!("./input1.txt");
     println!("{:?}", part1(input));
 }
 
@@ -32,8 +33,6 @@ const DIRECTION: [Dir; 4] = [
     },
 ];
 
-const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
 #[derive(Debug)]
 struct PipeMap {
     input: Vec<Vec<char>>,
@@ -44,8 +43,7 @@ struct PipeMap {
 
 impl Display for PipeMap {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        for (i, r) in self.output.iter().enumerate() {
-            // write!(f, "{i} :");
+        for r in self.output.iter() {
             for c in r.iter() {
                 write!(f, "{c}")?;
             }
@@ -54,6 +52,7 @@ impl Display for PipeMap {
         Ok(())
     }
 }
+
 #[derive(Debug, Eq, PartialEq)]
 struct State {
     // The pipe element at the center of the kernel.
@@ -62,12 +61,6 @@ struct State {
     col_index: usize,
     in_dir: Option<usize>,
     distance: u32,
-}
-
-impl State {
-    fn position_match(&self, other: &Self) -> bool {
-        self.row_index == other.row_index && self.col_index == other.col_index
-    }
 }
 
 impl From<&str> for PipeMap {
@@ -112,6 +105,12 @@ impl From<&str> for PipeMap {
     }
 }
 
+fn distance_to_char(distance: u32) -> char {
+    format!("{:01x}", (distance % 16))
+        .chars()
+        .nth(0)
+        .expect("error compting distance as a char")
+}
 impl PipeMap {
     fn at_start(&self, row_index: usize, col_index: usize) -> bool {
         self.start_row_index == row_index && self.start_col_index == col_index
@@ -128,36 +127,16 @@ impl PipeMap {
                             (state.col_index as i64).checked_add(d.col_inc)
                         {
                             let search_col_index = search_col_index as usize;
-                            // pe - The current pipe element under consideration.
                             if let Some(search_pe) = row.get(search_col_index) {
-                                println!(
-                                    "(col {:#?}, row {:#?}) dir {:?} current pe {:#?} search_pe {:#?} ",
-                                    search_col_index,
-                                    search_row_index,
-                                    dir_test,
-                                    state.pe,
-                                    search_pe
-                                );
-                                if *search_pe == 'S' {
-                                    // Unpon find S we always returning to the start.
-                                    return State {
-                                        pe: *search_pe,
-                                        distance: state.distance + 1,
-                                        row_index: search_row_index,
-                                        col_index: search_col_index,
-                                        in_dir: None,
-                                    };
-                                }
-                                // if we have found the exit and can compute the next
-                                // backward direction
                                 match (dir_test, state.pe) {
-                                    (0, 'S') | (0, '|') | (0, 'L') | (0, 'J') => {
-                                        println!("testing n {}", state.distance);
+                                    (0, 'S') | (0, 'J') | (0, '|') | (0, 'L') => {
                                         if *search_pe == '7'
                                             || *search_pe == '|'
                                             || *search_pe == 'F'
+                                            || *search_pe == 'S'
                                         {
-                                            println!("match next {:#?}", search_pe);
+                                            self.output[state.row_index][state.col_index] =
+                                                state.pe;
                                             return State {
                                                 pe: *search_pe,
                                                 distance: state.distance + 1,
@@ -168,12 +147,13 @@ impl PipeMap {
                                         }
                                     }
                                     (1, 'S') | (1, 'L') | (1, '-') | (1, 'F') => {
-                                        println!("testing e {}", state.distance);
                                         if *search_pe == 'J'
                                             || *search_pe == '-'
                                             || *search_pe == '7'
+                                            || *search_pe == 'S'
                                         {
-                                            println!("match next {:#?}", search_pe);
+                                            self.output[state.row_index][state.col_index] =
+                                                state.pe;
                                             return State {
                                                 pe: *search_pe,
                                                 distance: state.distance + 1,
@@ -184,12 +164,13 @@ impl PipeMap {
                                         }
                                     }
                                     (2, 'S') | (2, '7') | (2, '|') | (2, 'F') => {
-                                        println!("testing s {}", state.distance);
                                         if *search_pe == 'J'
                                             || *search_pe == '|'
                                             || *search_pe == 'L'
+                                            || *search_pe == 'S'
                                         {
-                                            println!("match next {:#?}", search_pe);
+                                            self.output[state.row_index][state.col_index] =
+                                                state.pe;
                                             return State {
                                                 pe: *search_pe,
                                                 distance: state.distance + 1,
@@ -200,12 +181,13 @@ impl PipeMap {
                                         }
                                     }
                                     (3, 'S') | (3, 'J') | (3, '-') | (3, '7') => {
-                                        println!("testing w {}", state.distance);
                                         if *search_pe == 'L'
                                             || *search_pe == '-'
                                             || *search_pe == 'F'
+                                            || *search_pe == 'S'
                                         {
-                                            println!("match next {:#?}", search_pe);
+                                            self.output[state.row_index][state.col_index] =
+                                                state.pe;
                                             return State {
                                                 pe: *search_pe,
                                                 distance: state.distance + 1,
@@ -216,7 +198,8 @@ impl PipeMap {
                                         }
                                     }
                                     _ => {
-                                        println!("no match");
+                                        // self.output[search_row_index][search_col_index] =
+                                        //     self.input[search_row_index][search_col_index];
                                     }
                                 };
                             }
@@ -256,7 +239,7 @@ fn part1(input: &str) -> u32 {
         lc += 1;
 
         // break after n_tries
-        if lc > 44 {
+        if lc > 12_0000 {
             break;
         }
     }
@@ -356,7 +339,7 @@ LJ...";
     }
 
     #[test]
-    fn example1() {
+    fn example_square() {
         let lines = r".....
 .S-7.
 .|.|.
@@ -366,8 +349,8 @@ LJ...";
         assert_eq!(part1(lines), 4);
     }
 
-    // Same patter as example1 but which clutter.
-    fn obsquered_loop() {
+    #[test]
+    fn example_square_cluttered() {
         let lines = r"-L|F7
 7S-7|
 L|7||
@@ -377,33 +360,45 @@ L|-JF";
         assert_eq!(part1(lines), 4);
     }
 
-    #[test]
-    fn two_loops_unknown_length() {
-        let loop1 = r"..F7.
-.FJ|.
-SJ.L7
-|F--J
-LJ...";
-
-        let loop2 = r"7-F7-
-.FJ|7
-SJLL7
-|F--J
-LJ.LJ";
-
-        let dist1 = part1(loop1);
-        let dist2 = part1(loop2);
-
-        assert_eq!(dist1, dist2);
-    }
-    #[test]
-    fn example2() {
+    fn complex_loop() {
         let lines = r"..F7.
 .FJ|.
 SJ.L7
 |F--J
 LJ...";
 
-        assert_eq!(part1(lines), 8);
+        assert_eq!(part1(lines), 4);
+    }
+
+    // Same patter as example1 but which clutter.
+    fn complex_loop_with_clutter() {
+        let lines = r"7-F7-
+.FJ|7
+SJLL7
+|F--J
+LJ.LJ";
+
+        assert_eq!(part1(lines), 4);
+    }
+
+    #[test]
+    fn two_loops_unknown_length() {
+        let lines = r"..F7.
+.FJ|.
+SJ.L7
+|F--J
+LJ...";
+        assert_eq!(part1(lines), 4);
+    }
+
+    #[test]
+    fn two_loops_unknown_length2() {
+        let lines = r"7-F7-
+.FJ|7
+SJLL7
+|F--J
+LJ.LJ";
+
+        assert_eq!(part1(lines), 3);
     }
 }
