@@ -36,11 +36,10 @@ const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 #[derive(Debug)]
 struct PipeMap {
-    row: Vec<Vec<char>>,
+    input: Vec<Vec<char>>,
+    output: Vec<Vec<char>>,
     start_row_index: usize,
     start_col_index: usize,
-    output: Vec<Vec<char>>,
-    next_digit: usize,
 }
 
 impl Display for PipeMap {
@@ -57,6 +56,8 @@ impl Display for PipeMap {
 }
 #[derive(Debug, Eq, PartialEq)]
 struct State {
+    // The pipe element at the center of the kernel.
+    pe: char,
     row_index: usize,
     col_index: usize,
     in_dir: Option<usize>,
@@ -74,7 +75,7 @@ impl From<&str> for PipeMap {
         let mut start_row_index = None;
         let mut start_col_index = None;
         let mut output = vec![];
-        let row = input
+        let input = input
             .lines()
             .enumerate()
             .map(|(row_index, line)| {
@@ -83,8 +84,6 @@ impl From<&str> for PipeMap {
                     .enumerate()
                     .map(|(col_index, c)| {
                         if c == 'S' {
-                            dbg!(row_index);
-                            dbg!(col_index);
                             start_row_index = Some(row_index);
                             start_col_index = Some(col_index);
                         }
@@ -93,17 +92,17 @@ impl From<&str> for PipeMap {
                     .collect::<Vec<char>>()
             })
             .collect::<Vec<Vec<char>>>();
-
+        println!("row, col {:#?} {:#?}", start_row_index, start_col_index);
         match (start_row_index, start_col_index) {
             (Some(start_row_index), Some(start_col_index)) => {
                 output[start_row_index][start_col_index] = 'S';
 
                 Self {
-                    row,
+                    input,
                     start_row_index,
                     start_col_index,
                     output,
-                    next_digit: 0,
+                    // next_digit: 0,
                 }
             }
             _ => {
@@ -117,145 +116,146 @@ impl PipeMap {
     fn at_start(&self, row_index: usize, col_index: usize) -> bool {
         self.start_row_index == row_index && self.start_col_index == col_index
     }
+
+    // walk round the clock looking for the exit.
     fn walk(&mut self, state: State) -> State {
-        // walk round the clock looking for the exit.
-        // let mut next_blocked_direction = state.in_dir;
-        let mut row_index = 0usize;
-        let mut col_index = 0usize;
         for (dir_test, d) in DIRECTION.iter().enumerate() {
             if Some(dir_test) != state.in_dir {
-                row_index = (state.row_index as i64 + d.row_inc) as usize;
-                if let Some(row) = self.row.get(row_index) {
-                    col_index = (state.col_index as i64 + d.col_inc) as usize;
-
-                    // dbg!(&row_index);
-                    // dbg!(&col_index);
-                    // if row_index > 122 {}
-                    // pe - The current pipe element under consideration.
-                    if let Some(pe) = row.get(col_index) {
-                        // if we have found the exit and can compute the next
-                        // backward direction
-                        dbg!(dir_test);
-                        dbg!(&pe);
-                        match (dir_test, pe) {
-                            (0, '|') => {
-                                next_blocked_direction = Some(2);
-                                break;
+                if let Some(search_row_index) = (state.row_index as i64).checked_add(d.row_inc) {
+                    let search_row_index = search_row_index as usize;
+                    if let Some(row) = self.input.get(search_row_index) {
+                        if let Some(search_col_index) =
+                            (state.col_index as i64).checked_add(d.col_inc)
+                        {
+                            let search_col_index = search_col_index as usize;
+                            // pe - The current pipe element under consideration.
+                            if let Some(search_pe) = row.get(search_col_index) {
+                                println!(
+                                    "(col {:#?}, row {:#?}) dir {:?} current pe {:#?} search_pe {:#?} ",
+                                    search_col_index,
+                                    search_row_index,
+                                    dir_test,
+                                    state.pe,
+                                    search_pe
+                                );
+                                if *search_pe == 'S' {
+                                    // Unpon find S we always returning to the start.
+                                    return State {
+                                        pe: *search_pe,
+                                        distance: state.distance + 1,
+                                        row_index: search_row_index,
+                                        col_index: search_col_index,
+                                        in_dir: None,
+                                    };
+                                }
+                                // if we have found the exit and can compute the next
+                                // backward direction
+                                match (dir_test, state.pe) {
+                                    (0, 'S') | (0, '|') | (0, 'L') | (0, 'J') => {
+                                        println!("testing n {}", state.distance);
+                                        if *search_pe == '7'
+                                            || *search_pe == '|'
+                                            || *search_pe == 'F'
+                                        {
+                                            println!("match next {:#?}", search_pe);
+                                            return State {
+                                                pe: *search_pe,
+                                                distance: state.distance + 1,
+                                                row_index: search_row_index,
+                                                col_index: search_col_index,
+                                                in_dir: Some(2),
+                                            };
+                                        }
+                                    }
+                                    (1, 'S') | (1, 'L') | (1, '-') | (1, 'F') => {
+                                        println!("testing e {}", state.distance);
+                                        if *search_pe == 'J'
+                                            || *search_pe == '-'
+                                            || *search_pe == '7'
+                                        {
+                                            println!("match next {:#?}", search_pe);
+                                            return State {
+                                                pe: *search_pe,
+                                                distance: state.distance + 1,
+                                                row_index: search_row_index,
+                                                col_index: search_col_index,
+                                                in_dir: Some(3),
+                                            };
+                                        }
+                                    }
+                                    (2, 'S') | (2, '7') | (2, '|') | (2, 'F') => {
+                                        println!("testing s {}", state.distance);
+                                        if *search_pe == 'J'
+                                            || *search_pe == '|'
+                                            || *search_pe == 'L'
+                                        {
+                                            println!("match next {:#?}", search_pe);
+                                            return State {
+                                                pe: *search_pe,
+                                                distance: state.distance + 1,
+                                                row_index: search_row_index,
+                                                col_index: search_col_index,
+                                                in_dir: Some(0),
+                                            };
+                                        }
+                                    }
+                                    (3, 'S') | (3, 'J') | (3, '-') | (3, '7') => {
+                                        println!("testing w {}", state.distance);
+                                        if *search_pe == 'L'
+                                            || *search_pe == '-'
+                                            || *search_pe == 'F'
+                                        {
+                                            println!("match next {:#?}", search_pe);
+                                            return State {
+                                                pe: *search_pe,
+                                                distance: state.distance + 1,
+                                                row_index: search_row_index,
+                                                col_index: search_col_index,
+                                                in_dir: Some(1),
+                                            };
+                                        }
+                                    }
+                                    _ => {
+                                        println!("no match");
+                                    }
+                                };
                             }
-                            (0, '-') => {}
-                            (0, 'F') => {}
-                            (0, '7') => {}
-                            (0, 'J') => {
-                                next_blocked_direction = Some(2);
-                                break;
-                            }
-                            (0, 'L') => {
-                                next_blocked_direction = Some(2);
-                                break;
-                            }
-                            (1, '|') => {}
-                            (1, '-') => {
-                                next_blocked_direction = Some(3);
-                                break;
-                            }
-                            (1, 'F') => {}
-                            (1, '7') => {
-                                next_blocked_direction = Some(3);
-                                break;
-                            }
-                            (1, 'J') => {
-                                next_blocked_direction = Some(3);
-                                break;
-                            }
-                            (1, 'L') => {}
-
-                            (2, '|') => {
-                                next_blocked_direction = Some(0);
-                                break;
-                            }
-                            (2, '-') => {}
-                            (2, 'F') => {
-                                next_blocked_direction = Some(1);
-                                break;
-                            }
-                            (2, '7') => {
-                                next_blocked_direction = Some(3);
-                                break;
-                            }
-                            (2, 'J') => {}
-                            (2, 'L') => {}
-                            (3, '|') => {}
-                            (3, '-') => next_blocked_direction = Some(1),
-                            (3, 'F') => {}
-                            (3, '7') => next_blocked_direction = Some(2),
-                            (3, 'J') => next_blocked_direction = Some(0),
-                            (3, 'L') => {}
-                            (_, '.') => {
-                                // can't do anything with a blank.
-                            }
-                            _ => {
-                                panic!("invalid direction");
-                            }
-                        };
+                        }
                     }
                 }
             }
         }
 
-        // For debug fill the distance into the map
-        // self.row[y as usize][x as usize] = '*';
-        State {
-            distance: state.distance + 1,
-            row_index,
-            col_index,
-            in_dir: next_blocked_direction,
-        }
+        panic!("Walked an could not find the exit");
     }
 }
 
 fn part1(input: &str) -> u32 {
     let mut map: PipeMap = input.into();
-    let mut first_walker = State {
-        distance: 0,
+
+    let mut state = State {
+        pe: 'S',
         row_index: map.start_row_index,
         col_index: map.start_col_index,
         in_dir: None,
-    };
-
-    // Advance first machine into the pipe.
-    first_walker = map.walk(first_walker);
-
-    // which path should be block when starting the second walker?
-    dbg!(first_walker.in_dir);
-    let bd = match first_walker.in_dir {
-        Some(0) => Some(2),
-        Some(1) => Some(3),
-        Some(2) => Some(0),
-        Some(3) => Some(1),
-        _ => panic!("invalid block direction to turn around."),
-    };
-
-    let mut second_walker = State {
         distance: 0,
-        row_index: map.start_row_index,
-        col_index: map.start_col_index,
-        in_dir: bd,
     };
-    //To keep in sync also push the second walker down the pipe.
-    second_walker = map.walk(second_walker);
-
     let mut lc = 0;
-    loop {
-        // Advance each walker until the share the same location again .. at the mid point of the loop.
-        first_walker = map.walk(first_walker);
-        // second_walker = map.walk(second_walker);
+    'walking: loop {
+        // Advance  walker until back at the start
+        state = map.walk(state);
 
-        if first_walker.position_match(&second_walker) {
-            break;
+        if state.col_index == map.start_col_index && state.row_index == map.start_row_index {
+            println!("match 1");
+            break 'walking;
         }
-
+        if state.pe == 'S' {
+            println!("match2");
+            break 'walking;
+        }
         lc += 1;
-        // 32 is a good place to stop
+
+        // break after n_tries
         if lc > 44 {
             break;
         }
@@ -263,7 +263,7 @@ fn part1(input: &str) -> u32 {
     // dbg!(&first_walker);
     // assert_eq!(first_walker.distance, second_walker.distance);
     println!("{map}");
-    first_walker.distance
+    state.distance / 2
 }
 
 #[cfg(test)]
@@ -282,17 +282,19 @@ LJ...";
 
         let start = State {
             distance: 0,
+            pe: 'S',
             row_index: map.start_row_index,
             col_index: map.start_col_index,
             in_dir: None,
         };
 
-        let first_path_state = map.walk(start);
-        dbg!(&first_path_state);
+        let first_state = map.walk(start);
+        // dbg!(&first_state);
 
         assert_eq!(
-            first_path_state,
+            first_state,
             State {
+                pe: 'J',
                 distance: 1,
                 row_index: 2,
                 col_index: 1,
@@ -300,20 +302,15 @@ LJ...";
             }
         );
 
-        let second_start = State {
-            distance: 0,
-            row_index: map.start_row_index,
-            col_index: map.start_col_index,
-            in_dir: Some(1),
-        };
-        let second_path_state = map.walk(second_start);
+        let second_path_state = map.walk(first_state);
         assert_eq!(
             second_path_state,
             State {
-                distance: 1,
-                row_index: 3,
-                col_index: 0,
-                in_dir: Some(0)
+                pe: 'F',
+                distance: 2,
+                row_index: 1,
+                col_index: 1,
+                in_dir: Some(2)
             }
         );
     }
@@ -331,39 +328,23 @@ LJ...";
         assert_eq!(map.start_row_index, 3);
         assert_eq!(map.start_col_index, 4);
         let start = State {
+            pe: 'S',
             distance: 0,
             row_index: map.start_row_index,
             col_index: map.start_col_index,
             in_dir: None,
         };
 
-        let first_path_state = map.walk(start);
-        dbg!(&first_path_state);
+        let first_state = map.walk(start);
 
         assert_eq!(
-            first_path_state,
+            first_state,
             State {
+                pe: '7',
                 distance: 1,
                 row_index: 2,
                 col_index: 4,
                 in_dir: Some(2)
-            }
-        );
-
-        let second_start = State {
-            distance: 0,
-            row_index: map.start_row_index,
-            col_index: map.start_col_index,
-            in_dir: Some(0),
-        };
-        let second_path_state = map.walk(second_start);
-        assert_eq!(
-            second_path_state,
-            State {
-                distance: 1,
-                row_index: 3,
-                col_index: 3,
-                in_dir: Some(1)
             }
         );
 
